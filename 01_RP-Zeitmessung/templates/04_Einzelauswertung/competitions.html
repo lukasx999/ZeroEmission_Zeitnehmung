@@ -1,0 +1,38 @@
+<!-- Florian Puchegger, 5AHET, 20.10.2023 -->
+<!-- In diesem File wird die Auswertung der einzelnen Bewerbe der Zeitmessung der Emily implementiert. -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Zeitmessung</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='05_Design/style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <img src="{{ url_for('static', filename='05_Design/HTL-Weiz-Logo.jpg') }}" width="150px">
+        <h2 class="logo">Home</h2>
+        <nav class="navigation">
+            <a href="{{ url_for('Zeitmessung') }}">Home</a>
+            <a href="{{ url_for('Bestenliste') }}">Bestenliste</a>
+            <a href="{{ url_for('Teamuebersicht') }}">Teamübersicht</a>
+            <a href="{{ url_for('Einzelauswertung') }}">Einzelauswertung</a>
+        </nav>
+    </header>
+
+    <div class="banner-btn">
+        {% for cmp in competitions %}
+            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name) }}">{{ cmp.name }}</a></button>
+            {% if loop.index % 2 == 0 %}<br>{% endif %}
+        {% endfor %}
+    </div>
+
+    <script src="{{ url_for('static', filename='04_Einzelauswertung/script.js') }}"></script>
+</body>
+
+</html>

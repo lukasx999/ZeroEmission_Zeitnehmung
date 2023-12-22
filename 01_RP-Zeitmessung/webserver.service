@@ -1,0 +1,13 @@
+[Unit]
+Description=My Webserver
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/admin/01_RP-Zeitmessung/startup_script.sh
+Restart=always
+RestartSec=10
+User=admin
+
+[Install]
+WantedBy=multi-user.target

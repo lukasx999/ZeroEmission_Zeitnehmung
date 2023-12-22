@@ -1,0 +1,79 @@
+<!-- Florian Puchegger, 5AHET, 20.10.2023 -->
+<!-- In diesem File wird die Bestenliste in den Webserver der Zeitmessung der Emily implementiert. -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Bestenliste</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='05_Design/style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <img src="{{ url_for('static', filename='05_Design/HTL-Weiz-Logo.jpg') }}" width="150px">
+        <h2 class="logo">Bestenliste {{ comp_name }}</h2>
+        <nav class="navigation">
+            <a href="{{ url_for('Zeitmessung') }}">Home</a>
+            <a href="{{ url_for('Bestenliste') }}">Bestenliste</a>
+            <a href="{{ url_for('Teamuebersicht') }}">Teamübersicht</a>
+            <a href="{{ url_for('Einzelauswertung') }}">Einzelauswertung</a>
+        </nav>
+    </header>
+
+    <table id="leaderboard">
+        <thead>
+            <tr>
+                <th>Platzierung</th>
+                <th>Team</th>
+                <th>Punkte</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for team in leaderboard_data %}
+                <tr>
+                    <td>{{ loop.index }}.</td>
+                    <td>{{ team.Team}}</td>
+                    <td>{{ team.TotalPoints}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+
+    <script>
+        // function to update leaderboard
+        function updateTable() {
+            fetch('/update_leaderboard')
+                .then(response => response.json())
+                .then(updatedData => {
+                    var tableBody = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ""; 
+
+                    for (var i = 0; i < updatedData.length; i++) {
+                        var row = tableBody.insertRow(i);
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        var cell3 = row.insertCell(2);
+
+                        cell1.innerHTML = (i + 1)+ ".";
+                        cell2.innerHTML = updatedData[i]["Team"];
+                        cell3.innerHTML = updatedData[i]["TotalPoints"];
+                    }
+                    
+                    console.log('Tabelle erfolgreich aktualisiert');
+                })
+                .catch(error => console.error('Error updating tables:', error));
+        }
+
+        setInterval(function () {
+            updateTable();
+        }, 30000); 
+    </script>
+</body>
+

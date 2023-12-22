@@ -1,0 +1,146 @@
+<!-- Florian Puchegger, 5AHET, 20.10.2023 -->
+<!-- In diesem File wird die Bestenliste in den Webserver der Zeitmessung der Emily implementiert. -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Zeitmessung</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='05_Design/style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <img src="{{ url_for('static', filename='05_Design/HTL-Weiz-Logo.jpg') }}" width="150px">
+        <h2 class="logo">{{ team_name }} </h2>
+        <nav class="navigation">
+            <a href="{{ url_for('Zeitmessung') }}">Home</a>
+            <a href="{{ url_for('Bestenliste') }}">Bestenliste</a>
+            <a href="{{ url_for('Teamuebersicht') }}">Teamübersicht</a>
+            <a href="{{ url_for('Einzelauswertung') }}">Einzelauswertung</a>
+        </nav>
+    </header>
+   
+    <div id="tables_container" style="display: flex; flex-direction: column;">
+        {% for current_table in data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ current_table[0].name }}</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th>Versuch</th>
+                        <th>Startzeit</th>
+                        <th>Endzeit</th>
+                        <th>Strafzeit</th>
+                        <th>Gesamtzeit</th>
+                    </tr>
+                </thead>
+    
+                <tbody>
+                    {% for current_row in current_table[1] %}
+                        <tr>
+                            <td>{{ current_row.attempt_nr }}</td>
+                            <td>{% if current_row.stoptime is not none %}{{ current_row.starttime.strftime('%d.%m.%Y, %H:%M:%S.%f')[:-3] }}{% else %}/{% endif %}</td>
+                            <td>{% if current_row.stoptime is not none %}{{ current_row.stoptime.strftime('%d.%m.%Y, %H:%M:%S.%f')[:-3] }}{% else %}/{% endif %}</td>
+                            <td>{% if current_row.timepenalty is not none %}{{ current_row.timepenalty}}{% else %}/{% endif %}</td>
+                            <td>{{ current_row.time }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+    
+                <tfoot>
+                    <tr>
+                        <th>Bestzeit:</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th>{{ current_table[2].time if current_table[2].time is defined else '/' }}</th> 
+                    </tr>
+                </tfoot>
+            </table>
+            <br>
+        {% endfor %}
+    </div>
+    
+
+    <script>
+        // function to replace table container
+        function replaceTablesContainer(newData) {
+            var tablesContainer = document.getElementById('tables_container');
+            tablesContainer.innerHTML = "-";  
+    
+            newData.forEach(teamInfo => {
+                var tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>${teamInfo[0]['name']}</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <th>Versuch</th>
+                                <th>Startzeit</th>
+                                <th>Endzeit</th>
+                                <th>Strafzeit</th>
+                                <th>Gesamtzeit</th>
+                            </tr>
+                        </thead>
+    
+                        <tbody>
+                            ${teamInfo[1].map(current_row => `
+                                <tr>
+                                    <td>${current_row['attempt_nr']}</td>
+                                    <td>${current_row['starttime']}</td>
+                                    <td>${current_row['stoptime']}</td>
+                                    <td>${current_row['timepenalty']}</td>
+                                    <td>${current_row['time']}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+    
+                        <tfoot>
+                            <tr>
+                                <th>Bestzeit:</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>${teamInfo[2]['time']}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <br>
+                `;
+                tablesContainer.innerHTML += tableHTML;
+            });
+
+            console.log('Tabellencontainer erfolgreich aktualisiert');
+        }
+    
+        // function to get new data
+        function updateTables() {
+            fetch('/update_team_board/{{ team_name }}')  
+                .then(response => response.json())
+                .then(newData => {
+                    replaceTablesContainer(newData);
+                })
+                .catch(error => console.error('Fehler beim Aktualisieren der Tabellen:', error));
+        }
+    
+        
+        setInterval(function () {
+            updateTables();
+        }, 30000);
+    </script>
+</body>
