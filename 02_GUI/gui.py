@@ -10,6 +10,7 @@ from functools import partial
 import paho.mqtt.client as mqtt
 import json
 from dateutil import parser
+import sys
 
 
 # Server configuration
@@ -112,7 +113,8 @@ def setup_mariadb():
         teams_list = Session_db.scalars(Select(teams.name)).all()
         challenges_list = Session_db.scalars(Select(challenges.name)).all()
     except:
-        messagebox.showerror('Error',"Couldn't connect to server.") 
+        messagebox.showerror('Error',"Couldn't connect to server.")
+        sys.exit()
 
 def update_challenge(event):
     selected_challenge_name = selected_challenge.get()
@@ -820,6 +822,7 @@ def setup_mqtt():
         client.loop_start()
     except:
         messagebox.showerror('Error',"Couldn't connect to MQTT-Server.")
+        sys.exit()
 
 
 setup_mariadb()
