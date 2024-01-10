@@ -73,7 +73,7 @@ void rtc_setup()
     {  
       if (gps.encode(gpsSerial.read()))
       {
-        if (gps.time.isValid() && gps.time.isUpdated() && gps.date.isValid() && gps.date.isUpdated() && gps.satellites.value() > 1) //gps.time.isValid() && gps.date.isValid() && gps.satellites.isValid() && gps.hdop.isValid() && gps.hdop.hdop() < 10
+        if (gps.time.isValid() && gps.time.isUpdated() && gps.date.isValid() && gps.date.isUpdated() && gps.satellites.value() > 1) 
         {   
           rtc.setTime(gps.time.second(), gps.time.minute(), gps.time.hour(), gps.date.day(), gps.date.month(), gps.date.year(), gps.time.centisecond()*10);
           
