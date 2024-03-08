@@ -1,0 +1,71 @@
+% 								Einleitung - Vorlage für Elektrotechnik
+%                         					2023 HTL Weiz
+%----------------------------------------------------------------------------------------------------
+% Dieses \LaTeX Template kann als Grundlage für die Erstellung von Diplomarbeitsdokumentationen
+% verwendet werden. In diesem File wird eine einheitliche Einleitung abgehandelt.
+%----------------------------------------------------------------------------------------------------
+
+%****************************************************************************************************
+%====================================== T I T E L S E I T E =========================================
+%****************************************************************************************************
+
+%=========================== K O P F Z E I L E - T I T E L S E I T E ================================
+
+\begin{titlingpage}
+	%Kopfzeile
+	\begin{figure}[h]
+		\begin{minipage}{0.2\textwidth}
+			\raggedright
+			\includegraphics[width=\linewidth]{./00_Introduction/HTL-Weiz-Logo.pdf}						% HTL-Weiz-Logo
+		\end{minipage}
+		\hfill
+		\begin{minipage}{0.1\textwidth}
+			\raggedleft
+			\includegraphics[width=\linewidth]{./00_Introduction/ZeroEmission-Logo.jpg}					% Zero-Emission-Logo
+		\end{minipage}
+		\hfill
+		\begin{center}
+			\vspace{-1.5cm}
+			\centering
+			\large \textbf{Höhere Technische\\ Bundeslehranstalt Weiz}									% HTBLA Weiz
+		\end{center}
+	\end{figure}
+	
+	\vspace{1cm}
+	
+	%========================== D O K U M E N T I N F O R M A T I O N E N ==============================
+	
+	\begin{center} {\resizebox{15.5cm}{1cm}{\textbf{Zero Emission Challenge}}}\\ \vspace{0.25cm} {\large Höhere Abteilung für Elektrotechnik}\\ \end{center}	% Diplomarbeit
+	\noindent\rule{\textwidth}{0.4pt}
+	\vspace{0.3cm}
+	\begin{center} {\LARGE\textbf{\iLUName}}\\ \end{center}																							% Diplomarbeitsname
+	\vspace{0.3cm}
+	\noindent\rule{\textwidth}{0.4pt}
+	
+	\renewcommand{\arraystretch}{1.5}
+	\begin{table}[H]
+		\begin{tabular}{p{6cm} p{5cm} p{3.75cm}}
+			\textbf{Abteilung}     & \textbf{Jahrgang} & \hspace{1cm} \textbf{Datum}  \\
+			Elektrotechnik         & \iYear            & \hspace{1cm} \iDate          \\
+			                       &                   &                              \\
+			\textbf{Themenbereich} & \textbf{Schüler}  & \hspace{1cm} \textbf{Klasse} \\
+			Hauptverantwortlicher  & Jonas Bichler     & \hspace{1cm} 5AHET           \\
+			Webserver-Design       & Florian Puchegger & \hspace{1cm} 5AHET           \\
+			Gehäuse-Konstruktion   & Rene Winter       & \hspace{1cm} 5AHET           \\
+			Gehäuse-Konstruktion   & Thomas Pieber     & \hspace{1cm} 5AHET           \\
+			Pegelwandler           & Fritz Stefan      & \hspace{1cm} 5AHET           \\
+			ESP32-S2 \& GPS-Modul  & Ricardo Wolf      & \hspace{1cm} 5BHET           \\
+			                       &                   &                              \\
+			\textbf{Lehrpersonen}  &                   &                              \\
+			\multicolumn{3}{l}{\iCoachOne}                                            \\
+			\multicolumn{3}{l}{\iCoachTwo}
+		\end{tabular}
+	\renewcommand{\arraystretch}{1}
+	\end{table}
+\end{titlingpage}
+
+\newpage
+\tableofcontents
+\newpage
+
+

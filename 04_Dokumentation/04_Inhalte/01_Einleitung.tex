@@ -1,0 +1,27 @@
+% 									Inhalte - Vorlage für Elektrotechnik
+%                        					 2023 HTL Weiz
+%----------------------------------------------------------------------------------------------------
+% Dieses \LaTeX Template kann als Grundlage für die Erstellung von CPE-Dokumentationen
+% verwendet werden. In diesem File werden die Inhalte in das Dokument eingebettet.
+%----------------------------------------------------------------------------------------------------
+\section{Einleitung}
+Für die Zeitnehmung bei der Zero Emission Challenge wurde ein eigens entwickeltes System verwendet, welches in diesem Dokument beschrieben bzw. Schritt für Schritt erklärt werden soll.
+
+\subsection{Funktionsweise}
+Für die Erfassung der Rundenzeiten wurde ein spezielles System eingesetzt, das nach dem Prinzip einer Lichtschranke funktioniert. Die Funktionsweise lässt sich grundlegend wie folgt erklären.
+
+\begin{enumerate}
+	\item \textbf{Lichtschranke:} Wird die Lichtschranke beim Start- bzw. Zieltor durchfahren, wird die aktuelle Zeit gespeichert und an ein hierfür eigens entwickeltes \textbf{\ac{GUI}} für die weitere Auswertung gesendet. Um eine zuverlässige Redundanz sicherzustellen, sind jeweils zwei identische Lichtschranken-Stationen an  Start- \& Zieltor installiert.
+	
+	\item \textbf{\acl{GUI}:} Im \ac{GUI} werden die Zeitstempel des Start- sowie Zieltors angezeigt und können nach der Auswahl der Challenge, Team, Versuchsnummer und der umgefahrenen Hütchen in die \textbf{\ac{DB}} gespeichert werden.
+	
+	\item \textbf{\acl{DB}:} In der \ac{DB} werden alle Teams, Challenges, Daten der einzelnen Versuche sowie alle aufgezeichneten Zeitstempel aller Lichtschranken gespeichert.
+	
+	\item \textbf{Webserver:} Hier werden die individuellen Versuche der einzelnen Teams nach der jeweiligen Challenge gewertet und übersichtlich dargestellt.
+\end{enumerate}
+
+
+
+
+
+

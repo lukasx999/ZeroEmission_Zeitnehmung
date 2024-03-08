@@ -1,0 +1,66 @@
+% 									CPE - Vorlage für Elektrotechnik
+%                   					      2023 HTL Weiz
+%----------------------------------------------------------------------------------------------------
+% Dieses \LaTeX Template kann als Grundlage für die Erstellung von Dokumentationen verwendet werden.
+% In diesem File werden sämtliche Einstellungen, sowie die einzelnen Inhalte miteinander verknüpft.
+%----------------------------------------------------------------------------------------------------
+
+%****************************************************************************************************
+%=========================== D O K U M E N T  I N F O R M A T I O N E N =============================
+%****************************************************************************************************
+% Hier werden einheitliche Infromationen für das Dokument festgelegt. (selbst ausfüllen)
+
+\newcommand{\iYear}{2023/24}																			% Jahrgang
+\newcommand{\iDate}{12.02.2024}																			% Datum
+\newcommand{\iLUName}{Zeitnehmung}																		% Übungsname
+\newcommand{\iClass}{5AHET}																				% Klasse
+\newcommand{\iNameOne}{Jonas Bichler}																	% Schüler
+\newcommand{\iNumber}{1}																				% Klassenbuchnummer
+\newcommand{\iCoachOne}{Prof. DI. Bergler Ewald}														% Lehrperson 1
+\newcommand{\iCoachTwo}{}																				% Lehrperson 2
+
+%****************************************************************************************************
+%=========================== D O K U M E N T  E I N S T E L L U N G E N =============================
+%****************************************************************************************************
+% Hier werden die Textart, das Papier, die Schriftgröße und alle Pakete definiert.
+
+\documentclass[12pt, a4paper, ngerman] {scrartcl}														% Papierformat
+\input{./../00_LatexDEF/DefPackages.tex}																% Packete
+
+%****************************************************************************************************
+%==================================== D E S I G N K O N Z E P T =====================================
+%****************************************************************************************************
+% Hier wird das grundsätzliche Aussehen des Dokuments festgelegt.
+
+\input{./../00_LatexDEF/DefStyle.tex}
+
+%****************************************************************************************************
+%==================================== D O K U M E N T A T I O N =====================================
+%****************************************************************************************************
+% Hier beginnt die eigentliche Dokumentation der Laborübung.
+
+\begin{document}
+%===================================== I N T R O D U C T I O N ======================================
+% Hier wird die Einleitung des Dokuments abgehandelt und strukturiert. (selbst ausfüllen)
+
+\input{./../02_Introduction/Introduction.tex}
+
+%========================================== I N H A L T E ===========================================
+% Hier wird die Aufgabenstellung implementiert. (selbst ausfüllen)
+
+\input{./../04_Inhalte/01_Einleitung.tex}
+\newpage
+
+\input{./../04_Inhalte/02_ServerKonfiguration.tex}
+\newpage
+
+\input{./../04_Inhalte/03_LichtschrankenStation.tex}
+\newpage
+
+\input{./../04_Inhalte/04_GUI.tex}
+\newpage
+
+\input{./../05_Closing/Closing.tex}
+	
+\end{document}
+

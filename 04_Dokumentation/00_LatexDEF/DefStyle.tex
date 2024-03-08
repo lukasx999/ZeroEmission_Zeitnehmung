@@ -1,0 +1,117 @@
+% 							Style-File - Vorlage für Elektrotechnik
+%                         				2023 HTL Weiz
+%----------------------------------------------------------------------------------------------------
+% Dieses \LaTeX Template kann als Grundlage für die Erstellung von Diplomarbeitsdokumentationen
+% verwendet werden. In diesem File wird das Aussehen, sowie Designeinstellungen implementiert.
+%----------------------------------------------------------------------------------------------------
+
+%****************************************************************************************************
+%==================================== S E I T E N F O R M A T =======================================
+%****************************************************************************************************
+
+\usepackage[a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}						% A4 und Seitenränder
+\setlength{\textwidth}{16.0cm}																			% Textbreite
+\setlength{\parindent}{0pt}																				% Einzug ausschalten
+\setstretch{1.3}																						% Zeilenabstand
+\pagestyle{fancy}																						% Seitenformatierung
+\setlist[itemize,enumerate]{itemsep=0pt}
+\setlength{\parindent}{0pt}
+%****************************************************************************************************
+%=============================== K O P F-  U N D  F U ß Z E I L E ===================================
+%****************************************************************************************************
+
+%======================================== S T A N D A R D ===========================================
+
+% Kopfzeile
+\lhead{\LARGE Zero Emission Challenge}						% Baselineskip entfernen falls der Übungsname in eine Zeile passt und das Logo kleiner machen
+\rhead{\vspace{-8pt}\includegraphics[scale=0.3]{./00_Introduction/ZeroEmission-Logo.jpg}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Fußzeile
+\lfoot{\iNameOne}
+\cfoot{\iYear}
+\rfoot{Seite \thepage\ von \pageref{LastPage}}
+\renewcommand{\footrulewidth}{0.4pt}
+
+%****************************************************************************************************
+%==================================== F A R B E N F O R M A T =======================================
+%****************************************************************************************************
+
+\definecolor{kaki}{rgb}{0.74,0.74,0.088}
+\definecolor{dred}{rgb}{0.722,0.18,0.18}
+\definecolor{darkgrey}{rgb}{0.364,0.411,0.439}
+\definecolor{lightgrey}{rgb}{0.776,0.792,0.803}
+\definecolor{pythonkeyword}{HTML}{0066CC}
+\definecolor{stringstyle}{HTML}{FF5E05}
+\definecolor{cppvariable}{HTML}{9CDCFE}
+\definecolor{cppkeyword}{HTML}{0066CC}
+
+%****************************************************************************************************
+%=============================== G L I E D E R U N G S E B E N E N ==================================
+%****************************************************************************************************
+
+% \setcounter{secnumdepth}{5}																			% Gliederungstiefe (hier: 5. Unterüberschrift [1.1.1.1.1]) jedoch eher für "BOOK" geeignet
+\setcounter{tocdepth}{2}																				% Inhaltsverzeichnistiefe (hier 2. Unterüberschrift [1.1])
+
+%****************************************************************************************************
+%============================== B I L D U N T E R S C H R I F T E N =================================
+%****************************************************************************************************
+
+\captionsetup{margin=10pt,font=small, labelfont={color=black!80, bf}, textfont={color=black!60}, format=hang, indention=-1cm}
+\captionsetup[wrapfigure]{name=Abbildung}
+\captionsetup[figure]{name=Abbildung}
+
+%****************************************************************************************************
+%================================= T E X T F E L D V O R L A G E ====================================
+%****************************************************************************************************
+
+\newenvironment{Textfeld1}{\begin{tcolorbox}[colback=lightgrey!5,colframe=darkgrey]\small}{\end{tcolorbox}}
+\newenvironment{Textfeld2}{\begin{tcolorbox}[colback=lightgrey!5,colframe=blue]\small}{\end{tcolorbox}}
+
+%****************************************************************************************************
+%================================== C O D E D A R S T E L U N G =====================================
+%****************************************************************************************************
+
+%============================== S T R U K T U R I E R T E R  T E X T ================================
+
+\lstdefinelanguage{Python}{
+	keywords={and, as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, in, is, lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield},
+	keywordstyle=\color{pythonkeyword},
+	commentstyle=\color{green},
+	stringstyle=\color{stringstyle},
+	sensitive=true,
+	comment=[l]{\#},
+	morestring=[b]',
+	morestring=[b]",
+	keywords=[2]{SERVER\_IP, MQTT\_USER, MQTT\_PASSWORD, DB\_USER, DB\_PASSWORD},
+	keywordstyle=[2]{\color{pythonkeyword}},
+}
+
+\lstdefinelanguage{myCpp}{
+	language=C++,
+	morekeywords={},
+	keywordstyle=\color{cppkeyword},
+	commentstyle=\color{green},
+	stringstyle=\color{stringstyle},
+	sensitive=true,
+	comment=[l]{//},
+	morecomment=[s]{/*}{*/},
+	morestring=[b]",
+	morekeywords=[2]{wifi\_ssid, wifi\_password, mqtt\_server, mqtt\_user, mqtt\_password},
+	keywordstyle=[2]{\color{cppvariable}}
+}
+
+\lstset{
+	basicstyle=\small\ttfamily,
+	numbers=none,
+	rulecolor=\color{black}, 
+	numbersep=5pt,
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4,
+	columns=flexible,
+	frame=none, 
+	backgroundcolor=\color{darkgrey!10}
+}
+
+
