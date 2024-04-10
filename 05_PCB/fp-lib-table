@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Zeitmessung")(type "KiCad")(uri "${KIPRJMOD}/Zeitmessung.pretty")(options "")(descr ""))
+)
