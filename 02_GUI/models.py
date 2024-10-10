@@ -20,14 +20,20 @@ class challenges(Base):
 
 class challenges_data(Base):
     __tablename__ = "challenges_data"
-    id = Column(Integer,primary_key=True,index=True)
-    tea_id = Column(Integer,ForeignKey("teams.id"),nullable=False)
-    cmp_id = Column(Integer,ForeignKey("challenges.id"),nullable=False)
-    attempt_nr = Column(Integer,nullable=False)
-    starttime = Column(DATETIME(fsp=6))
-    stoptime = Column(DATETIME(fsp=6))
-    timepenalty = Column(Float)
-    time = Column(Float,nullable=False)
+    id            = Column(Integer,primary_key=True,index=True)
+    tea_id        = Column(Integer,ForeignKey("teams.id"),nullable=False)
+    cmp_id        = Column(Integer,ForeignKey("challenges.id"),nullable=False)
+    attempt_nr    = Column(Integer,nullable=False)
+    starttime     = Column(DATETIME(fsp=6))
+    stoptime      = Column(DATETIME(fsp=6))
+    timepenalty   = Column(Float)
+    time          = Column(Float,nullable=False)
+
+class challenges_best_attempts(Base):
+    __tablename__ = "challenges_best_attempts"
+    id      = Column(Integer,primary_key=True,index=True)
+    team_id = Column(Integer, index=True)
+    time    = Column(Float,nullable=False)
 
 class raw_data(Base):
     __tablename__ = "raw_data"
