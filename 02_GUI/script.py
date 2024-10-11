@@ -6,9 +6,7 @@ from pprint import pprint
 from models     import teams, challenges, challenges_data, Session, Base, challenges_best_attempts
 from sqlalchemy import create_engine, Select, Delete, func, insert, text
 
-
-
-SERVER_IP   = "172.31.177.238"
+SERVER_IP   = "172.31.178.79"
 DB_USER     = "mariadbclient"
 DB_PASSWORD = "Kennwort1"
 DB_PORT     = '3306'
@@ -51,6 +49,7 @@ def calc_slalom(t_min: float, t_team: float, n_tn: float, n_rt: float) -> float:
 
 # TODO: fix id auto increment
 def populate_best_attempts() -> None:
+    # TODO: per challenge attempts
 
     Session_db.query(challenges_best_attempts).delete()  # clear table
     team_count = len(Session_db.scalars(Select(teams.name)).all())
@@ -68,16 +67,51 @@ def populate_best_attempts() -> None:
 
 
 
+
+
+def populate_best_new() -> None:
+
+    sel_challenge: str = "skidpad"
+    sql: str = f"""WITH RankedTimes AS (
+    SELECT
+        teams.name AS Team,
+        challenges.name AS Challenge,
+        challenges_data.cmp_id,
+        challenges_data.attempt_nr,
+        challenges_data.timepenalty,
+        challenges_data.time,
+        (RANK() OVER (PARTITION BY challenges_data.tea_id, challenges_data.cmp_id ORDER BY challenges_data.time ASC)) AS rank_num
+    FROM
+        challenges_data
+        JOIN teams on challenges_data.tea_id = teams.id
+        JOIN challenges on challenges_data.cmp_id = challenges.id
+        )    
+        
+            SELECT Team, Challenge, attempt_nr, timepenalty, time, rank_num
+            FROM RankedTimes
+            WHERE rank_num = 1 AND Challenge = "{sel_challenge}";"""
+
+    best: list[tuple[str]] = Session_db.execute(text(sql)).all()
+    pprint(best)
+
+
+
+
 def populate_leaderboard() -> None:
-    # n_tn
+    # Sum up all points from all challenges
+
+    # INFO: cmp_id is challengde id
+
+    # -> n_tn
     team_count = len(Session_db.scalars(Select(teams.name)).all())
 
-    # t_team
+    # -> t_team
     best_attempts = Session_db.scalar(Select(challenges_best_attempts.time))
     print(best_attempts)
 
-    # n_rt: ranking (generated)
+    # -> n_rt: ranking (generated)
 
+    # -> t_min: best time out of all teams
 
 
 
@@ -89,10 +123,30 @@ def main() -> int:
 
     # calc_skidpad(30, 3600, 3, 3600)
 
-    populate_best_attempts()
+    # populate_best_attempts()
+    populate_best_new()
     populate_leaderboard()
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

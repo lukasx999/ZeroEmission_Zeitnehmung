@@ -29,10 +29,12 @@ Base.metadata.create_all(bind=engine_db)
 
 
 def on_connect(client, userdata, flags, rc):
+    print("connected!")
     client.subscribe("esp32/timestamp",qos=2)
 
 
 def on_message(client, userdata, message):
+    print("message!")
     payload = message.payload.decode("utf-8")
 
     if message.topic == "esp32/timestamp" :
