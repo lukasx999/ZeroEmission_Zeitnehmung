@@ -69,13 +69,12 @@ def populate_best_attempts() -> None:
 
 
 
-def populate_best_new() -> None:
-
-    sel_challenge: str = "skidpad"
-    sql: str = f"""WITH RankedTimes AS (
+def get_best_attempts_sql(challenge_id: int) -> str:
+    return f"""
+    WITH RankedTimes AS (
     SELECT
-        teams.name AS Team,
-        challenges.name AS Challenge,
+        teams.id AS team,
+        challenges.id AS challenge,
         challenges_data.cmp_id,
         challenges_data.attempt_nr,
         challenges_data.timepenalty,
@@ -87,12 +86,37 @@ def populate_best_new() -> None:
         JOIN challenges on challenges_data.cmp_id = challenges.id
         )    
         
-            SELECT Team, Challenge, attempt_nr, timepenalty, time, rank_num
+            SELECT Team, Challenge, time
             FROM RankedTimes
-            WHERE rank_num = 1 AND Challenge = "{sel_challenge}";"""
+            WHERE rank_num = 1 AND challenge = {challenge_id};
+    """
 
-    best: list[tuple[str]] = Session_db.execute(text(sql)).all()
-    pprint(best)
+
+
+
+def populate_best_new() -> None:
+
+    challenge_count: int = 4 # TODO: fetch
+
+
+    # best: list[tuple[str]] = Session_db.execute(text(sql)).all()
+    # pprint(best)
+
+    for i in range(1, challenge_count+1):
+        sql = get_best_attempts_sql(i)
+        data = Session_db.execute(text(sql)).all()
+        pprint(data)
+
+        for d in data:
+            team = d[0]
+            chal = d[1]
+            time = d[2]
+            Session_db.execute(insert(challenges_best_attempts).values(
+                id=None, challenge_id=chal, team_id=team, time=time
+            ))
+
+
+    Session_db.commit()
 
 
 

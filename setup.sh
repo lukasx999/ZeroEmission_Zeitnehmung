@@ -7,6 +7,8 @@ exit 1
 
 # NOTE: this script is not finished and needs proper testing!
 
+# TODO: remove logs from gitignore?
+
 # TODO:
 # - Python Script: 
 #  - Table Best attempts

@@ -31,9 +31,10 @@ class challenges_data(Base):
 
 class challenges_best_attempts(Base):
     __tablename__ = "challenges_best_attempts"
-    id      = Column(Integer,primary_key=True,index=True)
-    team_id = Column(Integer, index=True)
-    time    = Column(Float,nullable=False)
+    id           = Column(Integer,primary_key=True,index=True)
+    challenge_id = Column(Integer, index=True)
+    team_id      = Column(Integer, index=True)
+    time         = Column(Float,nullable=False)
 
 class raw_data(Base):
     __tablename__ = "raw_data"
