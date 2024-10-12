@@ -7,19 +7,19 @@ from dateutil import parser
 import threading
 
 # Database configuration
-DB_USER = "mariadbclient"       # Replace "mariadbclient" with the actual database user 
-DB_PASSWORD = "Kennwort1"       # Replace "Kennwort1" with the actual database password 
+DB_USER     = "mariadbclient"   # Replace "mariadbclient" with the actual database user
+DB_PASSWORD = "Kennwort1"       # Replace "Kennwort1" with the actual database password
 
 # MQTT configuration
-MQTT_USER = "mqttclient"        # Replace "mqttclient" with the actual MQTT username 
-MQTT_PASSWORD = "Kennwort1"     # Replace "Kennwort1" with the actual MQTT password 
+MQTT_USER     = "mqttclient"    # Replace "mqttclient" with the actual MQTT username
+MQTT_PASSWORD = "Kennwort1"     # Replace "Kennwort1" with the actual MQTT password
 
 
 # constants for Database configurations
 SERVER_IPADRESS = "127.0.0.1"
-MQTT_PORT = 1883
-DB_PORT = '3306'  
-DB_NAME = 'Zeitmessung'
+MQTT_PORT       = 1883
+DB_PORT         = '3306'
+DB_NAME         = 'Zeitmessung'
 
 db_url = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{SERVER_IPADRESS}:{DB_PORT}/{DB_NAME}'
 engine_db = create_engine(db_url)
@@ -66,7 +66,9 @@ def start_mqtt_thread():
 start_mqtt_thread()
 
 
+
 app = Flask(__name__)
+
 
 
 def clean_dict(dictionary):
@@ -81,7 +83,7 @@ def Zeitmessung():
 def Bestenliste():
     Session_db.commit()
 
-    query = f"""WITH RankedTimes AS (
+    query = """WITH RankedTimes AS (
         SELECT
             teams.name AS Team,
             challenges.name AS Challenge,

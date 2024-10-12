@@ -11,6 +11,7 @@ import paho.mqtt.client as mqtt
 import json
 from dateutil import parser
 import sys
+import platform
 
 
 # Server configuration
@@ -37,7 +38,12 @@ engine_db = create_engine(db_url)
 Session_db = Session(bind = engine_db)
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame0")
+
+if platform.system() == "Linux":
+    ASSETS_PATH = OUTPUT_PATH / Path(r"assets/frame0")
+else:
+    ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame0")
+
 TIME_FORMAT = "%H:%M:%S.%f"
 
 def relative_to_assets(path: str) -> Path:

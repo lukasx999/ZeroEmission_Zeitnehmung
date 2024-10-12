@@ -36,6 +36,12 @@ class challenges_best_attempts(Base):
     team_id      = Column(Integer, index=True)
     time         = Column(Float,nullable=False)
 
+class leaderboard(Base):
+    __tablename__ = "leaderboard"
+    id      = Column(Integer,primary_key=True,index=True)
+    team_id = Column(Integer, index=True)
+    points  = Column(Integer, index=True)
+
 class raw_data(Base):
     __tablename__ = "raw_data"
     id = Column(Integer,primary_key=True,index=True)
