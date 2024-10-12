@@ -149,10 +149,13 @@ def main() -> int:
 
     # calc_skidpad(30, 3600, 3, 3600)
 
-    # populate_best_attempts()
-    populate_best_new()
+    # populate_best_new()
     # populate_leaderboard()
+
+
+
     return 0
+
 
 
 if __name__ == "__main__":

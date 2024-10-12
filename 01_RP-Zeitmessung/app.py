@@ -144,31 +144,21 @@ def Einzelauswertung():
 
 @app.route('/Einzelauswertung/<selected_cmp_name>')
 def comp_page(selected_cmp_name):
+    # shows the best time of each team for every challenge
     Session_db.commit()
 
-    query = f"""WITH RankedTimes AS (
-        SELECT
-            teams.name AS Team,
-            challenges.name AS Challenge,
-            challenges_data.cmp_id,
-            challenges_data.attempt_nr,
-            challenges_data.timepenalty,
-            challenges_data.time,
-            (RANK() OVER (PARTITION BY challenges_data.tea_id, challenges_data.cmp_id ORDER BY challenges_data.time ASC)) AS rank_num
-        FROM
-            challenges_data
-            JOIN teams on challenges_data.tea_id = teams.id
-            JOIN challenges on challenges_data.cmp_id = challenges.id
-        )
-        SELECT Team, Challenge, attempt_nr, timepenalty, time, (RANK() OVER (ORDER BY RankedTimes.time DESC)) AS Points
-        FROM RankedTimes
-        WHERE rank_num = 1 AND Challenge = "{selected_cmp_name}"
-        ORDER BY time ASC;
-        """
+    query: str = f"""\
+                  SELECT teams.name AS Team, time
+                  FROM `challenges_best_attempts`
+                  JOIN teams ON team_id = teams.id
+                  JOIN challenges ON challenge_id = challenges.id
+                  WHERE challenges.name = "{selected_cmp_name}"
+                  ORDER BY time ASC;
+                  """
 
     raw_data = Session_db.execute(text(query)).fetchall()
 
-    data = []
+    data: list = []
     for row in raw_data:
         data.append(dict(row._asdict()))
 
