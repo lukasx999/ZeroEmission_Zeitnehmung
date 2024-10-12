@@ -7,21 +7,6 @@ exit 1
 
 # NOTE: this script is not finished and needs proper testing!
 
-# TODO: remove logs from gitignore?
-# NOTE: 01_RP-Zeitmessung/venv should not be gitignored
-
-
-# TODO:
-# - Python Script: 
-#  - Table Best attempts
-#  - Table leaderboard
-#   - Output to static website
-#   - + Dummy data
-# - GUI DB Management
-# - Install Script
-# SoftDelete
-# Cronjob
-
 
 
 # Only for 'Zeitmessung' table

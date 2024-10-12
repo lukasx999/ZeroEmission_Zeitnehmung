@@ -147,22 +147,7 @@ def comp_page(selected_cmp_name):
     # shows the best time of each team for every challenge
     Session_db.commit()
 
-    query: str = f"""\
-                  SELECT teams.name AS Team, time
-                  FROM `challenges_best_attempts`
-                  JOIN teams ON team_id = teams.id
-                  JOIN challenges ON challenge_id = challenges.id
-                  WHERE challenges.name = "{selected_cmp_name}"
-                  ORDER BY time ASC;
-                  """
-
-    raw_data = Session_db.execute(text(query)).fetchall()
-
-    data: list = []
-    for row in raw_data:
-        data.append(dict(row._asdict()))
-
-    return render_template('04_Einzelauswertung/competition_page.html',cmp_data=data,cmp_name=selected_cmp_name)
+    return render_template('04_Einzelauswertung/competition_page.html', cmp_name=selected_cmp_name)
 
 
 
@@ -197,9 +182,7 @@ def update_leaderboard():
 
     raw_data = Session_db.execute(text(query)).fetchall()
 
-    data = []
-    for row in raw_data:
-        data.append(dict(row._asdict()))
+    data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
 
     return jsonify(data)
 
@@ -213,8 +196,8 @@ def update_team_board(selected_team_name):
     team_data = []
     for challenge in challenges_all:
         raw_data = Session_db.scalars(Select(challenges_data).where(challenges_data.tea_id==selected_team.id,challenges_data.cmp_id==challenge.id).order_by(asc(challenges_data.attempt_nr))).all()
-        
-       
+
+
         data_best = Session_db.scalars(Select(challenges_data).where(challenges_data.tea_id==selected_team.id,challenges_data.cmp_id==challenge.id).order_by(asc(challenges_data.time))).first()
 
         challenge_dict = clean_dict(challenge.__dict__) 
@@ -234,33 +217,18 @@ def update_team_board(selected_team_name):
 def update_challenge(selected_cmp_name):
     Session_db.commit()
 
-    Session_db.commit()
-
-    query = f"""WITH RankedTimes AS (
-        SELECT
-            teams.name AS Team,
-            challenges.name AS Challenge,
-            challenges_data.cmp_id,
-            challenges_data.attempt_nr,
-            challenges_data.timepenalty,
-            challenges_data.time,
-            (RANK() OVER (PARTITION BY challenges_data.tea_id, challenges_data.cmp_id ORDER BY challenges_data.time ASC)) AS rank_num
-        FROM
-            challenges_data
-            JOIN teams on challenges_data.tea_id = teams.id
-            JOIN challenges on challenges_data.cmp_id = challenges.id
-        )
-        SELECT Team, Challenge, attempt_nr, timepenalty, time, (RANK() OVER (ORDER BY RankedTimes.time DESC)) AS Points
-        FROM RankedTimes
-        WHERE rank_num = 1 AND Challenge = "{selected_cmp_name}"
-        ORDER BY time ASC;
-        """
+    query: str = f"""\
+                  SELECT teams.name AS Team, time
+                  FROM `challenges_best_attempts`
+                  JOIN teams ON team_id = teams.id
+                  JOIN challenges ON challenge_id = challenges.id
+                  WHERE challenges.name = "{selected_cmp_name}"
+                  ORDER BY time ASC;
+                  """
 
     raw_data = Session_db.execute(text(query)).fetchall()
 
-    data = []
-    for row in raw_data:
-        data.append(dict(row._asdict()))
+    data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
 
     return jsonify(data)
 

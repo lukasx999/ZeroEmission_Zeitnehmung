@@ -35,20 +35,20 @@
         </thead>
 
         <tbody>
-            {% for team in cmp_data %}
-                <tr>
-                    <td>{{ loop.index }}.</td>
-                    <td>{{ team['Team'] }}</td>
-                    <td>{{ team['time'] }}</td>
-                </tr>
-            {% endfor %}
+            <!-- {% for team in cmp_data %} -->
+            <!--     <tr> -->
+            <!--         <td>{{ loop.index }}.</td> -->
+            <!--         <td>{{ team['Team'] }}</td> -->
+            <!--         <td>{{ team['time'] }}</td> -->
+            <!--     </tr> -->
+            <!-- {% endfor %} -->
         </tbody>
-        
+
     </table>
 
     <script>
         // function to update leaderboard
-        function updateTable() {
+        const updateTable = () => {
             fetch('/update_challenge/{{ cmp_name }}')
                 .then(response => response.json())
                 .then(updatedData => {
@@ -70,10 +70,9 @@
                 })
                 .catch(error => console.error('Error updating tables:', error));
         }
+        updateTable();
+        setInterval(() => updateTable(), 30000);
 
-        setInterval(function () {
-            updateTable();
-        }, 30000); 
     </script>
 </body>
 
