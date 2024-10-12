@@ -14,7 +14,7 @@ import sys
 
 
 # Server configuration
-SERVER_IP   = "172.31.178.79" # Replace "IP-Address" with the actual IP address of the RasPi
+SERVER_IP   = "10.0.0.242" # Replace "IP-Address" with the actual IP address of the RasPi
 
 # MQTT configuration
 MQTT_USER = "mqttclient"        # Replace "mqttclient" with the actual MQTT username 

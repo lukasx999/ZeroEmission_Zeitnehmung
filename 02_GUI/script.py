@@ -6,7 +6,7 @@ from pprint import pprint
 from models     import teams, challenges, challenges_data, Session, Base, challenges_best_attempts
 from sqlalchemy import create_engine, Select, Delete, func, insert, text
 
-SERVER_IP   = "172.31.178.79"
+SERVER_IP   = "10.0.0.242"
 DB_USER     = "mariadbclient"
 DB_PASSWORD = "Kennwort1"
 DB_PORT     = '3306'
@@ -96,7 +96,9 @@ def get_best_attempts_sql(challenge_id: int) -> str:
 
 def populate_best_new() -> None:
 
-    challenge_count: int = 4 # TODO: fetch
+    challenge_count: int = len(Session_db.scalars(Select(challenges.name)).all())
+
+    Session_db.query(challenges_best_attempts).delete()  # clear table
 
 
     # best: list[tuple[str]] = Session_db.execute(text(sql)).all()
@@ -149,7 +151,7 @@ def main() -> int:
 
     # populate_best_attempts()
     populate_best_new()
-    populate_leaderboard()
+    # populate_leaderboard()
     return 0
 
 
