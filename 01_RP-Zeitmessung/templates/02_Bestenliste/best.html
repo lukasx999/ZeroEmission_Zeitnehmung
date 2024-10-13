@@ -35,15 +35,15 @@
         </thead>
 
         <tbody>
-            {% for team in leaderboard_data %}
-                <tr>
-                    <td>{{ loop.index }}.</td>
-                    <td>{{ team.Team}}</td>
-                    <td>{{ team.TotalPoints}}</td>
-                </tr>
-            {% endfor %}
+            <!-- {% for team in leaderboard_data %} -->
+            <!--     <tr> -->
+            <!--         <td>{{ loop.index }}.</td> -->
+            <!--         <td>{{ team.Team}}</td> -->
+            <!--         <td>{{ team.TotalPoints}}</td> -->
+            <!--     </tr> -->
+            <!-- {% endfor %} -->
         </tbody>
-        
+
     </table>
 
     <script>
@@ -65,15 +65,15 @@
                         cell2.innerHTML = updatedData[i]["Team"];
                         cell3.innerHTML = updatedData[i]["TotalPoints"];
                     }
-                    
+
                     console.log('Tabelle erfolgreich aktualisiert');
                 })
                 .catch(error => console.error('Error updating tables:', error));
         }
+        updateTable();
 
-        setInterval(function () {
-            updateTable();
-        }, 30000); 
+        setInterval(() => updateTable(), 30000);
+
     </script>
 </body>
 
