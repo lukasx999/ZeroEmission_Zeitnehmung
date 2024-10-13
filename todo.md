@@ -10,6 +10,7 @@ NOTE: 01_RP-Zeitmessung/venv should not be gitignored
 
 TODO:
 - **Python Script**:
+  - [ ] CSV output
   - [ ] GUI DB Management
   - [ ] SoftDelete
   - [ ] Cronjob

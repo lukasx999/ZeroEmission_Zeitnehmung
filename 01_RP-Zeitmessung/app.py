@@ -140,37 +140,6 @@ def comp_page(selected_cmp_name):
 def update_leaderboard():
     Session_db.commit()
 
-    # query = """WITH RankedTimes AS (
-    #     SELECT
-    #         teams.name AS Team,
-    #         challenges.name AS Challenge,
-    #         challenges_data.cmp_id,
-    #         challenges_data.attempt_nr,
-    #         challenges_data.timepenalty,
-    #         challenges_data.time,
-    #         (RANK() OVER (PARTITION BY challenges_data.tea_id, challenges_data.cmp_id ORDER BY challenges_data.time ASC)) AS rank_num
-    #     FROM
-    #         challenges_data
-    #         JOIN teams on challenges_data.tea_id = teams.id
-    #         JOIN challenges on challenges_data.cmp_id = challenges.id
-    #     )
-    #     SELECT Team, SUM(Points) AS TotalPoints
-    #     FROM (
-    #     SELECT Team, Challenge, (RANK() OVER (PARTITION BY Challenge ORDER BY time DESC)) AS Points
-    #     FROM RankedTimes
-    #     WHERE rank_num = 1
-    #     ) AS TeamRanks
-    #     GROUP BY Team
-    #     ORDER BY Points DESC;
-    #     """
-    #
-    # raw_data = Session_db.execute(text(query)).fetchall()
-    #
-    # data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
-    #
-    # return jsonify(data)
-
-
     query = """\
         SELECT teams.name as Team, points as TotalPoints FROM `leaderboard`
         JOIN teams on team_id = teams.id;

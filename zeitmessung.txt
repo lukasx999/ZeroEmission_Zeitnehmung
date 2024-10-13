@@ -1,2 +1,0 @@
-ssh admin@rp-server over LAN
-172.31.177.238/21
