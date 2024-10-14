@@ -4,7 +4,7 @@ import sys
 from pprint import pprint
 
 from models     import teams, challenges, challenges_data, Session, Base, challenges_best_attempts, leaderboard
-from sqlalchemy import create_engine, Select, Delete, func, insert, text, ScalarResult, asc as ascending
+from sqlalchemy import create_engine, Select, Delete, func, insert, text, ScalarResult, asc as ascending, alias, CursorResult
 
 SERVER_IP   = "10.0.0.242"
 DB_USER     = "mariadbclient"
@@ -51,9 +51,10 @@ def calc_slalom(t_min: float, t_team: float,
 
 def calc_acceleration(t_min: float, t_team: float,
                       n_tn:  float, n_rt:   float,
-                      l_min: float, l_team: float) -> float:
+                      mean_power: float, l_min: float,
+                      vehicle_weight: float, driver_weight: float) -> float:
 
-    # TODO: L_team
+    l_team: float = mean_power / (vehicle_weight + driver_weight)
 
     num: float = 1 + (n_tn / (200*n_rt))
     den: float = 1 + (n_tn/200)
@@ -62,10 +63,12 @@ def calc_acceleration(t_min: float, t_team: float,
 
 
 def calc_endurance(t_min: float, t_team: float,
-                   n_tn:  float, n_rt:   float) -> float:
+                   n_tn:  float, n_rt:   float,
+                   w_min:  float, w_team:   float) -> float:
 
-    return 100 * (t_min/t_team)  # End Time
-    # return 150 * (w_min/w_team) # End energy
+    points_endtime:   float =  100 * (t_min/t_team)  # End Time
+    points_endenergy: float =  150 * (w_min/w_team) # End energy
+    return points_endtime + points_endenergy
 
 
 
@@ -80,6 +83,8 @@ def get_best_attempts_sql(challenge_id: int) -> str:
         challenges_data.attempt_nr,
         challenges_data.timepenalty,
         challenges_data.time,
+        challenges_data.power,
+        challenges_data.energy,
         (RANK() OVER (PARTITION BY challenges_data.tea_id, challenges_data.cmp_id ORDER BY challenges_data.time ASC)) AS rank_num
     FROM
         challenges_data
@@ -87,7 +92,7 @@ def get_best_attempts_sql(challenge_id: int) -> str:
         JOIN challenges on challenges_data.cmp_id = challenges.id
         )
 
-            SELECT Team, Challenge, time
+            SELECT Team, Challenge, time, power, energy
             FROM RankedTimes
             WHERE rank_num = 1 AND challenge = {challenge_id};
     """
@@ -107,15 +112,17 @@ def populate_best_attempts() -> None:
 
     for i in range(1, challenge_count+1):
         sql = get_best_attempts_sql(i)
-        data = Session_db.execute(text(sql)).all()
+        data: CursorResult = Session_db.execute(text(sql)).all()
         # pprint(data)
 
-        for d in data:
-            team = d[0]
-            chal = d[1]
-            time = d[2]
+        for column in data:
+            team   = column[0]
+            chal   = column[1]
+            time   = column[2]
+            power  = column[3]
+            energy = column[4]
             Session_db.execute(insert(challenges_best_attempts).values(
-                id=None, challenge_id=chal, team_id=team, time=time
+                id=None, challenge_id=chal, team_id=team, time=time, power=power, energy=energy
             ))
 
 
@@ -136,6 +143,34 @@ def get_rank(challenge_id: int, team: int) -> int:
 
     team_sequence: list[int] = result.fetchall()
     return team_sequence.index(team)+1
+
+
+
+
+def get_energy(team_id: int, challenge_id: int) -> tuple[float]:
+
+    energy_team: float = Session_db.scalar(Select(challenges_best_attempts.energy)
+                                           .where(challenges_best_attempts.team_id      == team_id)
+                                           .where(challenges_best_attempts.challenge_id == challenge_id))
+
+    energy_min: float =  Session_db.scalar(Select(challenges_best_attempts.energy)
+                                           .where(challenges_best_attempts.challenge_id == challenge_id)
+                                           .order_by(ascending(challenges_best_attempts.energy)))
+
+    return (energy_team, energy_min)
+
+
+
+def get_weights(team_id: int) -> None:
+
+    sql: str = """SELECT (vehicle_weight + driver_weight) AS weight FROM teams ORDER BY weight ASC; """
+    best_weight: CursorResult = Session_db.execute(text(sql)).fetchone()
+
+    weight_driver:  float = Session_db.scalar(Select(teams.driver_weight) .where(teams.id == team_id))
+    weight_vehicle: float = Session_db.scalar(Select(teams.vehicle_weight).where(teams.id == team_id))
+
+    return (weight_driver, weight_vehicle, best_weight[0])
+
 
 
 
@@ -169,22 +204,30 @@ def populate_leaderboard() -> None:
 
             assert time is not None  # Sanity check
 
+
+            mean_power: float = Session_db.scalar(Select(challenges_best_attempts.power)
+                                             .where(challenges_best_attempts.team_id      == team)
+                                             .where(challenges_best_attempts.challenge_id == challenge))
+
+
             match challenge:  # Calculate points for current challenge
                 case 1:
                     points = calc_skidpad(best, time, team_count, rank)
                 case 2:
                     points = calc_slalom(best, time, team_count, rank)
                 case 3:
-                    points = calc_acceleration(best, time, team_count, rank, 1, 1)
+                    assert mean_power is not None
+                    (weight_driver, weight_vehicle, best_weight) = get_weights(team)
+                    points = calc_acceleration(best, time, team_count, rank, mean_power, best_weight, weight_vehicle, weight_driver)
                 case 4:
-                    points = calc_endurance(best, time, team_count, rank)
+                    (energy_team, energy_min) = get_energy(team, challenge)
+                    points = calc_endurance(best, time, team_count, rank, energy_min, energy_team)
 
             points_sum += points
 
-        # pprint(f"{round(points_sum)=}")
-
         # Sum up all of the points and add them to the leaderboard table
-        Session_db.execute(insert(leaderboard).values(id=None, team_id=team, points=points_sum))
+        POINTS_DIGITS: int = 3
+        Session_db.execute(insert(leaderboard).values(id=None, team_id=team, points=round(points_sum, POINTS_DIGITS)))
 
     Session_db.commit()
 

@@ -11,6 +11,8 @@ class teams(Base):
     __tablename__ = "teams"
     id = Column(Integer,primary_key=True,index=True)
     name = Column(Text,nullable=False,index=True)
+    vehicle_weight = Column(Float,nullable=False,index=True)
+    driver_weight = Column(Float,nullable=False,index=True)
 
 class challenges(Base):
     __tablename__ = "challenges"
@@ -28,6 +30,8 @@ class challenges_data(Base):
     stoptime      = Column(DATETIME(fsp=6))
     timepenalty   = Column(Float)
     time          = Column(Float,nullable=False)
+    power         = Column(Float,nullable=True)  # mean power measurements for the acceleration challenge. (NULL if challenge is not acceleration)
+    energy         = Column(Float,nullable=True)  # energy measurements for the endurance challenge. (NULL if challenge is not endurance)
 
 class challenges_best_attempts(Base):
     __tablename__ = "challenges_best_attempts"
@@ -35,12 +39,14 @@ class challenges_best_attempts(Base):
     challenge_id = Column(Integer, index=True)
     team_id      = Column(Integer, index=True)
     time         = Column(Float,nullable=False)
+    power        = Column(Float,nullable=True)  # mean power measurements for the acceleration challenge. (NULL if challenge is not acceleration)
+    energy       = Column(Float,nullable=True)  # energy measurements for the endurance challenge. (NULL if challenge is not endurance)
 
 class leaderboard(Base):
     __tablename__ = "leaderboard"
     id      = Column(Integer,primary_key=True,index=True)
     team_id = Column(Integer, index=True)
-    points  = Column(Integer, index=True)
+    points  = Column(Float, index=True)
 
 class raw_data(Base):
     __tablename__ = "raw_data"
