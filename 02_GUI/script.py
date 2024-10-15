@@ -6,7 +6,7 @@ from pprint import pprint
 from models     import teams, challenges, challenges_data, Session, Base, challenges_best_attempts, leaderboard
 from sqlalchemy import create_engine, Select, Delete, func, insert, text, ScalarResult, asc as ascending, alias, CursorResult
 
-SERVER_IP   = "10.0.0.242"
+SERVER_IP   = "192.168.0.211"
 DB_USER     = "mariadbclient"
 DB_PASSWORD = "Kennwort1"
 DB_PORT     = '3306'
@@ -142,6 +142,8 @@ def get_rank(challenge_id: int, team: int) -> int:
                              .order_by(ascending(challenges_best_attempts.time)))
 
     team_sequence: list[int] = result.fetchall()
+    if team not in team_sequence:
+        return -1
     return team_sequence.index(team)+1
 
 
@@ -196,6 +198,9 @@ def populate_leaderboard() -> None:
 
             # -> n_rt: ranking - based on time compared to other teams
             rank: int = get_rank(challenge, team)
+
+            if rank == -1:
+                continue
 
             # -> t_team
             time: float|None = Session_db.scalar(Select(challenges_best_attempts.time)

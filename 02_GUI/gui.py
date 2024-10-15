@@ -12,10 +12,12 @@ import json
 from dateutil import parser
 import sys
 import platform
+from sqlalchemy.dialects.mysql.mariadb import *
+from mariadb import *
 
 
 # Server configuration
-SERVER_IP   = "10.0.0.242" # Replace "IP-Address" with the actual IP address of the RasPi
+SERVER_IP   = "192.168.0.211" # Replace "IP-Address" with the actual IP address of the RasPi
 
 # MQTT configuration
 MQTT_USER = "mqttclient"        # Replace "mqttclient" with the actual MQTT username 
@@ -47,7 +49,7 @@ else:
 TIME_FORMAT = "%H:%M:%S.%f"
 
 def relative_to_assets(path: str) -> Path:
-    return ASSETS_PATH / Path(path)
+    return  Path(r"assets\frame0") / Path(path)
 
 window = Tk()
 window.geometry("1440x900")
@@ -110,6 +112,22 @@ attemptnr = None
 status = True
 
 
+def loadConfig():
+    config_path = Path(r"config\config.json")
+    if config_path.exists():
+        with open(config_path, 'r') as config_file:
+            config = json.load(config_file)
+            devices.append(config.get("start1", ""))
+            selected_challenge.set(config.get("challenge", ""))
+            combo_challenge.set(config.get("challenge", ""))
+            update_challenge(None)
+            start1_selected.set(config.get("start1", ""))
+            start2_selected.set(config.get("start2", ""))
+            finish1_selected.set(config.get("finish1", ""))
+            finish2_selected.set(config.get("finish2", ""))
+    else:
+        messagebox.showerror('Error', "Config file not found.")
+
 def setup_mariadb():
     try:
         Base.metadata.create_all(engine_db)
@@ -130,6 +148,22 @@ def update_challenge(event):
 
     canvas.itemconfig(penalty_id,text=str(challenge_db.penalty))
     update_timepenalty()
+
+def update_team(event):
+    team_db = Session_db.scalar(Select(teams).where(teams.name == selected_team.get()))
+    if team_db and challenge_db:
+        next_attempt = Session_db.scalar(
+            Select(challenges_data.attempt_nr)
+            .where(challenges_data.tea_id == team_db.id, challenges_data.cmp_id == challenge_db.id)
+            .order_by(challenges_data.attempt_nr.desc())
+        )
+        next_attempt = next_attempt + 1 if next_attempt is not None else 1
+        print(next_attempt)
+        entry_attempt.delete(0, 'end')
+        entry_attempt.insert(0, next_attempt if next_attempt else 1)
+        update_attemptnr()
+    else:
+        messagebox.showerror('Error','Please input team.')
 
 def update_start_timestamp(man_timestamp):
     global start_timestamp
@@ -227,6 +261,19 @@ def update_timepenalty():
     timepenalty = float(challenge_db.penalty * hatsdown ) if challenge_db != None else None
     canvas.itemconfig(timepenalty_id,text=str(timepenalty)) if timepenalty != None else None
     update_totaltime()
+
+def update_energy():
+    global energy
+
+    try:
+        energy = int(entry_energy.get()) if entry_energy.get() != '' else 0
+    except:
+        messagebox.showerror("Warning","Couldn't convert number. Please input as integer number.")
+        return
+
+    #timepenalty = float(challenge_db.penalty * hatsdown ) if challenge_db != None else None
+    #canvas.itemconfig(timepenalty_id,text=str(timepenalty)) if timepenalty != None else None
+    #update_totaltime()
     
 def update_totaltime():
     global totaltime
@@ -305,7 +352,8 @@ def decline():
     timepenalty = None
     totaltime = None
     attemptnr = None
-
+    
+    selected_team.set("")
 
     entry_start.delete(0,'end')
     selected_timestamp_start1.set(None)
@@ -325,6 +373,10 @@ def decline():
 
     entry_attempt.delete(0,'end')
     canvas.itemconfig(totaltime_id,text="")
+
+    for widget in window.winfo_children():
+        if isinstance(widget, Radiobutton):
+            widget.destroy()
 
     return   
 
@@ -390,7 +442,7 @@ def update_status(button):
         
 def build_gui():    
     image_image_1 = PhotoImage(
-        file=relative_to_assets("image_1.png"))
+        file=relative_to_assets("image_2.png"))
     image_1 = canvas.create_image(
         690.0,
         449.0,
@@ -411,6 +463,7 @@ def build_gui():
     combo_teams = ttk.Combobox(window, textvariable=selected_team, values=teams_list)
     combo_teams.place(x=406.0, y=206.0, width=271.0, height=41.0)
     combo_teams["state"] = "readonly"
+    combo_teams.bind("<<ComboboxSelected>>", update_team)
 
     # devices
     global combo_start1
@@ -694,6 +747,44 @@ def build_gui():
         height=25.0
     )
 
+    # input energy
+    global entry_energy
+    entry_energy_image = PhotoImage(
+        file=relative_to_assets("entry_timepenalty.png"))
+    entry_bg_12 = canvas.create_image(
+        833.0,
+        795.0,
+        image=entry_energy_image
+    )
+    entry_energy = Entry(
+        bd=0,
+        bg="#D9D9D9",
+        fg="#000716",
+        highlightthickness=0
+    )
+    entry_energy.place(
+        x=791.0,
+        y=781.5,
+        width=84.0,
+        height=23.0
+    )
+
+    button_energy_image = PhotoImage(
+        file=relative_to_assets("button_timepenalty.png"))
+    button_energy = Button(
+        image=button_energy_image,
+        borderwidth=0,
+        highlightthickness=0,
+        command=update_timepenalty,
+        relief="flat"
+    )
+    button_energy.place(
+        x=875.0,
+        y=781.5,
+        width=33.0,
+        height=25.0
+    )
+
 
     # activate button
     button_activate_imga = PhotoImage(
@@ -776,6 +867,7 @@ def build_gui():
 
 
     window.resizable(True, True)
+    loadConfig()
     window.mainloop()
 
 
@@ -786,7 +878,6 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, message):
     payload = message.payload.decode("utf-8")
-
     if message.topic == "esp32/timestamp" and status:
         data_json = json.loads(payload)
        
@@ -794,6 +885,7 @@ def on_message(client, userdata, message):
             start1_timestamps.insert(0,parser.isoparse(data_json['timestamp']))
             if len(start1_timestamps) == 5:
                 start1_timestamps.pop(4)
+                
 
         if data_json["esp_id"] == start2_selected.get():  
             start2_timestamps.insert(0,parser.isoparse(data_json["timestamp"]))
@@ -830,12 +922,12 @@ def setup_mqtt():
         messagebox.showerror('Error',"Couldn't connect to MQTT-Server.")
         sys.exit()
 
-
 setup_mariadb()
 
 setup_mqtt()
 
 build_gui()
+
 
 
 

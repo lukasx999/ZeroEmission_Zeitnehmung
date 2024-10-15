@@ -72,6 +72,8 @@ mkdir /var/www/01_RP-Zeitmessung/logs # Error on 'systemctl restart apache2'
 CREATE TABLE teams (
 id integer NOT NULL AUTO_INCREMENT,
 name text NOT NULL,
+vehicle_weight float NOT NULL,
+driver_weight float NOT NULL,
 PRIMARY KEY (id)
 );
 
@@ -80,7 +82,7 @@ PRIMARY KEY (id)
 CREATE TABLE challenges (
 id integer NOT NULL AUTO_INCREMENT,
 name text NOT NULL,
-penalty float NOT NULL;
+penalty float NOT NULL,
 PRIMARY KEY (id)
 );
 
@@ -97,15 +99,32 @@ starttime datetime,
 stoptime datetime,
 timepenalty float,
 time float NOT NULL,
+power float,
+energy float,
 PRIMARY KEY (id)
 );
 
 
 # TODO: generate "challenges_best_attempts"
+CREATE TABLE challenges_best_attempts (
+id integer NOT NULL AUTO_INCREMENT,
+challenge_id integer NOT NULL,
+team_id integer NOT NULL,
+time float NOT NULL,
+power float,
+energy float,
+PRIMARY KEY (id)
+);
 
+CREATE TABLE leaderboard (
+id integer NOT NULL AUTO_INCREMENT,
+team_id integer NOT NULL,
+points float,
+PRIMARY KEY (id)
+);
 
 CREATE TABLE raw_data (
-id integer,
+id integer NOT NULL AUTO_INCREMENT,
 esp_id text NOT NULL,
 timestamp datetime NOT NULL,
 PRIMARY KEY (id)
