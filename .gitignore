@@ -127,3 +127,5 @@ platformio_override.ini
 # macOS
 .DS_Store
 **/.DS_Store
+02_GUI/leaderboard.pdf
+02_GUI/db_struct_data.sql

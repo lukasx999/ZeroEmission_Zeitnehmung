@@ -30,7 +30,7 @@
             <tr>
                 <th>Platzierung</th>
                 <th>Team</th>
-                <th>Zeit</th>
+                <th>Punkte</th>
             </tr>
         </thead>
 
@@ -49,7 +49,7 @@
     <script>
         // function to update leaderboard
         const updateTable = () => {
-            fetch('/update_challenge/{{ cmp_name }}')
+            fetch('/update_challenge/{{ cmp_name }}/{{ category }}')
                 .then(response => response.json())
                 .then(updatedData => {
                     var tableBody = document.getElementById("challenge_table").getElementsByTagName('tbody')[0];
@@ -63,7 +63,7 @@
 
                         cell1.innerHTML = (i + 1)+ ".";
                         cell2.innerHTML = updatedData[i]["Team"];
-                        cell3.innerHTML = updatedData[i]["time"];
+                        cell3.innerHTML = updatedData[i]["TotalPoints"];
                     }
 
                     console.log('Tabelle erfolgreich aktualisiert');
@@ -71,7 +71,7 @@
                 .catch(error => console.error('Error updating tables:', error));
         }
         updateTable();
-        setInterval(() => updateTable(), 30000);
+        setInterval(() => updateTable(), 60000);
 
     </script>
 </body>

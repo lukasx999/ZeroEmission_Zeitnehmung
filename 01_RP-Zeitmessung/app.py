@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify, url_for
+from flask import Flask, render_template, jsonify, url_for, request
 from sqlalchemy import create_engine, Select, asc, desc, Table, MetaData, text
-from models import teams,challenges,challenges_data,Session,Base,raw_data
+from models import teams,challenges,challenges_data,Session,Base,raw_data,leaderboard
 import paho.mqtt.client as mqtt
 import json
 from dateutil import parser
@@ -50,20 +50,20 @@ def on_message(client, userdata, message):
         Session_db.add(data)
         Session_db.commit()
 
-def start_mqtt_client():
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
-    client.connect(SERVER_IPADRESS, MQTT_PORT, 60)
-    client.loop_start()
+# def start_mqtt_client():
+#     client = mqtt.Client()
+#     client.on_connect = on_connect
+#     client.on_message = on_message
+#     client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+#     client.connect(SERVER_IPADRESS, MQTT_PORT, 60)
+#     client.loop_start()
 
-def start_mqtt_thread():
-    mqtt_thread = threading.Thread(target=start_mqtt_client)
-    mqtt_thread.daemon = True
-    mqtt_thread.start()
+# def start_mqtt_thread():
+#     mqtt_thread = threading.Thread(target=start_mqtt_client)
+#     mqtt_thread.daemon = True
+#     mqtt_thread.start()
 
-start_mqtt_thread()
+# start_mqtt_thread()
 
 
 
@@ -91,7 +91,14 @@ def Bestenliste():
     # raw_data = Session_db.execute(text(query)).fetchall()
     # return render_template('02_Bestenliste/best.html', leaderboard_data=raw_data)
 
-    return render_template('02_Bestenliste/best.html')
+    return render_template('02_Bestenliste/leaderboards.html')
+
+@app.route('/Bestenliste/<selected_category>')
+def leaderboard_page(selected_category):
+    # shows the best time of each team for every challenge
+    Session_db.commit()
+
+    return render_template('02_Bestenliste/leaderboard_page.html', category=selected_category)
 
 
 
@@ -128,26 +135,54 @@ def Einzelauswertung():
 
 @app.route('/Einzelauswertung/<selected_cmp_name>')
 def comp_page(selected_cmp_name):
+    selected_categorie = request.args.get('selected_category')
     # shows the best time of each team for every challenge
     Session_db.commit()
 
-    return render_template('04_Einzelauswertung/competition_page.html', cmp_name=selected_cmp_name)
+    return render_template('04_Einzelauswertung/competition_page.html', cmp_name=selected_cmp_name, category=selected_categorie)
 
 
 
 
-@app.route('/update_leaderboard', methods=['GET'])
-def update_leaderboard():
+# @app.route('/update_leaderboard', methods=['GET'])
+# def update_leaderboard():
+#     Session_db.commit()
+
+#     query = """\
+#         SELECT teams.name as Team, points as TotalPoints FROM `leaderboard`
+#         JOIN teams on team_id = teams.id;
+#         """
+
+#     raw_data = Session_db.execute(text(query)).fetchall()
+#     data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
+#     return jsonify(data)
+
+
+@app.route('/update_leaderboard/<selected_category>', methods=['GET'])
+def update_leaderboard(selected_category):
     Session_db.commit()
 
     query = """\
         SELECT teams.name as Team, points as TotalPoints FROM `leaderboard`
-        JOIN teams on team_id = teams.id;
+        JOIN teams on team_id = teams.id
+        WHERE leaderboard.category = :selected_category
+        ORDER BY TotalPoints DESC;
         """
 
-    raw_data = Session_db.execute(text(query)).fetchall()
+    raw_data = Session_db.execute(text(query), {'selected_category': selected_category}).fetchall()
     data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
     return jsonify(data)
+    # Session_db.commit()
+
+    # raw_data = Session_db.scalars(Select(teams.name, leaderboard.points)
+    #                               .join(teams, leaderboard.team_id == teams.id)
+    #                               .where(leaderboard.category == selected_category)
+    #                               .order_by(desc(leaderboard.points))).all()
+    
+    # print("raw_data",raw_data)
+
+    # data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
+    # return jsonify(data)
 
 
 @app.route('/update_team_board/<selected_team_name>', methods=['GET'])
@@ -177,20 +212,40 @@ def update_team_board(selected_team_name):
             
     return jsonify(team_data)
 
-@app.route('/update_challenge/<selected_cmp_name>', methods=['GET'])
-def update_challenge(selected_cmp_name):
+@app.route('/update_challenge/<selected_cmp_name>/<selected_category>', methods=['GET'])
+def update_challenge(selected_cmp_name,selected_category):
     Session_db.commit()
 
-    query: str = f"""\
-                  SELECT teams.name AS Team, time
-                  FROM `challenges_best_attempts`
-                  JOIN teams ON team_id = teams.id
-                  JOIN challenges ON challenge_id = challenges.id
-                  WHERE challenges.name = "{selected_cmp_name}"
-                  ORDER BY time ASC;
-                  """
+    
+    # query: str = f"""\
+    #                 FROM `challenges_best_attempts`
+    #               JOIN teams ON team_id = teams.id
+    #                JOIN challenges ON challenge_id = challenges.id
+    #                 WHERE challenges.name = :selected_cmp_name" AND challenges.category = :selected_category"
+    #                  ORDER BY time ASC;
 
-    raw_data = Session_db.execute(text(query)).fetchall()
+    # 
+    # 
+    #                  """
+
+    selected_cmp_id = 1 if selected_cmp_name == "Skidpad" else 2 if selected_cmp_name == "Slalom" else 3 if selected_cmp_name == "Acceleration" else "Endurance"
+
+    pstr = "points_skidpad" if selected_cmp_id == 1 else "points_slalom" if selected_cmp_id == 2 else "points_acceleration" if selected_cmp_id == 3 else "points_endurance"
+
+    print("selected_cmp_name",selected_cmp_name)
+    print("selected_cmp_id",selected_cmp_id)
+    print("pstr",pstr)
+    query = """\
+        SELECT teams.name as Team, """+ pstr+ """ as TotalPoints FROM `leaderboard`
+        JOIN teams on team_id = teams.id
+        WHERE leaderboard.category = :selected_category
+        ORDER BY TotalPoints DESC;
+        """
+
+    print("query",query)
+    print("selected_category",selected_category)
+    raw_data = Session_db.execute(text(query), {'selected_category': selected_category}).fetchall()
+    print("raw_data",raw_data)
 
     data: list[dict[str: str]] = [dict(row._asdict()) for row in raw_data]
 

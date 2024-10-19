@@ -16,7 +16,15 @@
 
     <header>
         <img src="{{ url_for('static', filename='05_Design/HTL-Weiz-Logo.jpg') }}" width="150px">
-        <h2 class="logo">Bestenliste {{ comp_name }}</h2>
+        <h2 class="logo">
+            {% if category == "1" %}
+            Bestenliste HTL
+            {% elif category == "2" %}
+            Bestenliste Cart
+            {% else %}
+            Bestenliste {{ category }}
+            {% endif %}
+        </h2>
         <nav class="navigation">
             <a href="{{ url_for('Zeitmessung') }}">Home</a>
             <a href="{{ url_for('Bestenliste') }}">Bestenliste</a>
@@ -49,7 +57,7 @@
     <script>
         // function to update leaderboard
         function updateTable() {
-            fetch('/update_leaderboard')
+            fetch('/update_leaderboard/{{ category }}')
                 .then(response => response.json())
                 .then(updatedData => {
                     var tableBody = document.getElementById("leaderboard").getElementsByTagName('tbody')[0];
@@ -72,7 +80,7 @@
         }
         updateTable();
 
-        setInterval(() => updateTable(), 30000);
+        setInterval(() => updateTable(), 60000);
 
     </script>
 </body>

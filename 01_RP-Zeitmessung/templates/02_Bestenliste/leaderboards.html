@@ -26,15 +26,9 @@
     </header>
 
     <div class="banner-btn">
-        {% for cmp in competitions %}
-            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=1) }}">{{ cmp.name }} HTL</a></button>
-            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=2) }}">{{ cmp.name }} Cart</a></button>
-            <br>
-           <!-- {% if loop.index % 2 == 0 %}<br>{% endif %} -->
-        {% endfor %}
+        <button type="button"><span></span><a href="{{ url_for('leaderboard_page', selected_category=1) }}">Kategorie HTL</a></button>
+        <button type="button"><span></span><a href="{{ url_for('leaderboard_page', selected_category=2) }}">Kategorie Cart</a></button>
     </div>
-
-   <!-- <script src="{{ url_for('static', filename='04_Einzelauswertung/script.js') }}"></script>-->
 </body>
 
 </html>

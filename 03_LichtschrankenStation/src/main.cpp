@@ -12,8 +12,8 @@
 
 
 // WiFi credentials
-const char* wifi_ssid = "SSID";           // Replace "SSID" with your WiFi network name
-const char* wifi_password = "PASSWORD";   // Replace "PASSWORD" with your WiFi password
+const char* wifi_ssid = "BpwDPdrV6Lfn";           // Replace "SSID" with your WiFi network name
+const char* wifi_password = "SEDgDT9JuERp";   // Replace "PASSWORD" with your WiFi password
 
 // MQTT server configuration
 const char* mqtt_server = "SERVER-IP";    // Replace "SERVER-IP" with the IP address of your MQTT server
@@ -132,6 +132,13 @@ void setup()
     delay(1000);
     Serial.println(".");
   }
+  while (1)
+  {
+    
+    Serial.printf("%4d", WiFi.RSSI());
+    delay(2000);
+  }
+  
 
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(2,2);

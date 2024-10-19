@@ -134,4 +134,4 @@ PRIMARY KEY (id)
 
 # SQL:
 exec_sql_zeitmessung "INSERT INTO teams (name) VALUES ('Team 1'), ('Team 2'), ('Team 3');"
-exec_sql_zeitmessung "INSERT INTO challenges (name, penalty) VALUES ('Challgende 1', 1.0), ('Challenge 2', 2.0);"
+exec_sql_zeitmessung "INSERT INTO challenges (name, penalty) VALUES ('Challenge 1', 1.0), ('Challenge 2', 2.0);"

@@ -33,13 +33,9 @@
                         <th>{{ current_table[0].name }}</th>
                         <th></th>
                         <th></th>
-                        <th></th>
-                        <th></th>
                     </tr>
                     <tr>
                         <th>Versuch</th>
-                        <th>Startzeit</th>
-                        <th>Endzeit</th>
                         <th>Strafzeit</th>
                         <th>Gesamtzeit</th>
                     </tr>
@@ -48,9 +44,7 @@
                 <tbody>
                     {% for current_row in current_table[1] %}
                         <tr>
-                            <td>{{ current_row.attempt_nr }}</td>
-                            <td>{% if current_row.stoptime is not none %}{{ current_row.starttime.strftime('%d.%m.%Y, %H:%M:%S.%f')[:-3] }}{% else %}/{% endif %}</td>
-                            <td>{% if current_row.stoptime is not none %}{{ current_row.stoptime.strftime('%d.%m.%Y, %H:%M:%S.%f')[:-3] }}{% else %}/{% endif %}</td>
+                            <td>{{ current_row.attempt_nr }}</td>>
                             <td>{% if current_row.timepenalty is not none %}{{ current_row.timepenalty}}{% else %}/{% endif %}</td>
                             <td>{{ current_row.time }}</td>
                         </tr>
@@ -60,8 +54,6 @@
                 <tfoot>
                     <tr>
                         <th>Bestzeit:</th>
-                        <th></th>
-                        <th></th>
                         <th></th>
                         <th>{{ current_table[2].time if current_table[2].time is defined else '/' }}</th> 
                     </tr>
@@ -86,13 +78,9 @@
                                 <th>${teamInfo[0]['name']}</th>
                                 <th></th>
                                 <th></th>
-                                <th></th>
-                                <th></th>
                             </tr>
                             <tr>
                                 <th>Versuch</th>
-                                <th>Startzeit</th>
-                                <th>Endzeit</th>
                                 <th>Strafzeit</th>
                                 <th>Gesamtzeit</th>
                             </tr>
@@ -102,8 +90,6 @@
                             ${teamInfo[1].map(current_row => `
                                 <tr>
                                     <td>${current_row['attempt_nr']}</td>
-                                    <td>${current_row['starttime']}</td>
-                                    <td>${current_row['stoptime']}</td>
                                     <td>${current_row['timepenalty']}</td>
                                     <td>${current_row['time']}</td>
                                 </tr>
@@ -113,8 +99,6 @@
                         <tfoot>
                             <tr>
                                 <th>Bestzeit:</th>
-                                <th></th>
-                                <th></th>
                                 <th></th>
                                 <th>${teamInfo[2]['time']}</th>
                             </tr>
@@ -139,8 +123,6 @@
         }
     
         
-        setInterval(function () {
-            updateTables();
-        }, 30000);
+        //setInterval(function () {updateTables(); }, 30000);
     </script>
 </body>

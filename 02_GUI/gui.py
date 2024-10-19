@@ -2,6 +2,7 @@ from pathlib import Path
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter.messagebox import askyesno
 from datetime import datetime, timedelta
 from models import teams,challenges,challenges_data,Session,Base
 from sqlalchemy import create_engine, Select,Delete
@@ -158,7 +159,6 @@ def update_team(event):
             .order_by(challenges_data.attempt_nr.desc())
         )
         next_attempt = next_attempt + 1 if next_attempt is not None else 1
-        print(next_attempt)
         entry_attempt.delete(0, 'end')
         entry_attempt.insert(0, next_attempt if next_attempt else 1)
         update_attemptnr()
@@ -266,14 +266,20 @@ def update_energy():
     global energy
 
     try:
-        energy = int(entry_energy.get()) if entry_energy.get() != '' else 0
+        energy = float(entry_energy.get().replace(',','.')) if entry_energy.get() != '' else None
     except:
-        messagebox.showerror("Warning","Couldn't convert number. Please input as integer number.")
+        messagebox.showerror("Warning","Couldn't convert energy number. Please input as float number.")
+        return
+    
+def update_power():
+    global power
+
+    try:
+        power = float(entry_power.get().replace(',','.')) if entry_power.get() != '' else None
+    except:
+        messagebox.showerror("Warning","Couldn't convert power number. Please input as float number.")
         return
 
-    #timepenalty = float(challenge_db.penalty * hatsdown ) if challenge_db != None else None
-    #canvas.itemconfig(timepenalty_id,text=str(timepenalty)) if timepenalty != None else None
-    #update_totaltime()
     
 def update_totaltime():
     global totaltime
@@ -323,6 +329,26 @@ def confirm():
     data.stoptime = finish_timestamp
     data.timepenalty = timepenalty
     
+    update_energy()
+    update_power()
+
+    if challenge_db.name == 'Acceleration':
+        if entry_energy.get() == '':
+            answer = askyesno(title='Warning',
+                    message='No energy value provided! Do you want to continue?')
+            if not answer:
+                return
+
+    if challenge_db.name == 'Endurance':
+        if entry_power.get() == '':
+            answer = askyesno(title='Warning',
+                    message='No mean power value provided! Do you want to continue?')
+            if not answer:
+                return
+
+    data.energy = energy
+    data.power = power
+    
 
     if laptime:
         data.time = totaltime 
@@ -345,6 +371,8 @@ def decline():
     global timepenalty
     global totaltime
     global attemptnr
+    global energy
+    global power
 
     start_timestamp = None
     finish_timestamp = None
@@ -352,6 +380,8 @@ def decline():
     timepenalty = None
     totaltime = None
     attemptnr = None
+    energy = None
+    power = None
     
     selected_team.set("")
 
@@ -372,6 +402,12 @@ def decline():
     canvas.itemconfig(timepenalty_id,text="")
 
     entry_attempt.delete(0,'end')
+    canvas.itemconfig(totaltime_id,text="")
+
+    entry_energy.delete(0,'end')
+    canvas.itemconfig(totaltime_id,text="")
+
+    entry_power.delete(0,'end')
     canvas.itemconfig(totaltime_id,text="")
 
     for widget in window.winfo_children():
@@ -752,8 +788,8 @@ def build_gui():
     entry_energy_image = PhotoImage(
         file=relative_to_assets("entry_timepenalty.png"))
     entry_bg_12 = canvas.create_image(
-        833.0,
-        795.0,
+        993.0,
+        775.0,
         image=entry_energy_image
     )
     entry_energy = Entry(
@@ -763,8 +799,8 @@ def build_gui():
         highlightthickness=0
     )
     entry_energy.place(
-        x=791.0,
-        y=781.5,
+        x=951.0,
+        y=761.5,
         width=84.0,
         height=23.0
     )
@@ -775,12 +811,50 @@ def build_gui():
         image=button_energy_image,
         borderwidth=0,
         highlightthickness=0,
-        command=update_timepenalty,
+        command=update_energy,
         relief="flat"
     )
     button_energy.place(
-        x=875.0,
-        y=781.5,
+        x=1035.0,
+        y=761.5,
+        width=33.0,
+        height=25.0
+    )
+
+    # input power
+    global entry_power
+    entry_power_image = PhotoImage(
+        file=relative_to_assets("entry_timepenalty.png"))
+    entry_bg_12 = canvas.create_image(
+        993.0,
+        835.0,
+        image=entry_power_image
+    )
+    entry_power = Entry(
+        bd=0,
+        bg="#D9D9D9",
+        fg="#000716",
+        highlightthickness=0
+    )
+    entry_power.place(
+        x=951.0,
+        y=821.5,
+        width=84.0,
+        height=23.0
+    )
+
+    button_power_image = PhotoImage(
+        file=relative_to_assets("button_timepenalty.png"))
+    button_power = Button(
+        image=button_power_image,
+        borderwidth=0,
+        highlightthickness=0,
+        command=update_power,
+        relief="flat"
+    )
+    button_power.place(
+        x=1035.0,
+        y=821.5,
         width=33.0,
         height=25.0
     )
@@ -841,7 +915,7 @@ def build_gui():
         relief="flat"
     )
     button_confirm.place(
-        x=1036.0,
+        x=1176.0,
         y=716.0,
         width=99.0,
         height=32.0
@@ -859,7 +933,7 @@ def build_gui():
         relief="flat"
     )
     button_decline.place(
-        x=1036.0,
+        x=1176.0,
         y=581.0,
         width=99.0,
         height=32.0
@@ -878,6 +952,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, message):
     payload = message.payload.decode("utf-8")
+    print(payload)
     if message.topic == "esp32/timestamp" and status:
         data_json = json.loads(payload)
        
