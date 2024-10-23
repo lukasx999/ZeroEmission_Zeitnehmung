@@ -27,8 +27,8 @@
 
     <div class="banner-btn">
         {% for cmp in competitions %}
-            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=1) }}">{{ cmp.name }} HTL</a></button>
-            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=2) }}">{{ cmp.name }} Cart</a></button>
+            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=1) }}">{{ cmp.name }} FIA</a></button>
+            <button type="button"><span></span><a href="{{ url_for('comp_page', selected_cmp_name=cmp.name, selected_category=2) }}">{{ cmp.name }} ZEC</a></button>
             <br>
            <!-- {% if loop.index % 2 == 0 %}<br>{% endif %} -->
         {% endfor %}

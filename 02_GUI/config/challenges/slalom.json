@@ -1,0 +1,7 @@
+{
+    "challenge": "Slalom",
+    "start1": "ESP32-84:F7:03:DD:3B:C4",
+    "start2": "ESP32-84:F7:03:E8:6C:4C",
+    "finish1": "ESP32-84:F7:03:DD:3B:C4",
+    "finish2": "ESP32-84:F7:03:E8:6C:4C"
+}

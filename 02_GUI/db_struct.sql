@@ -20,8 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Datenbank: `Zeitmessung`
 --
-CREATE DATABASE IF NOT EXISTS `Zeitmessung_1` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `Zeitmessung_1`;
+CREATE DATABASE IF NOT EXISTS `Zeitmessung` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `Zeitmessung`;
 
 -- --------------------------------------------------------
 
@@ -34,6 +34,16 @@ CREATE TABLE `challenges` (
   `name` text NOT NULL,
   `penalty` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Daten für Tabelle `challenges`
+--
+
+INSERT INTO `challenges` (`id`, `name`, `penalty`) VALUES
+(1, 'Skidpad', 2),
+(2, 'Slalom', 2),
+(3, 'Acceleration', 0),
+(4, 'Endurance', 2);
 
 -- --------------------------------------------------------
 
@@ -194,6 +204,12 @@ ALTER TABLE `raw_data`
 ALTER TABLE `teams`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
+
+CREATE USER 'mariadbclient'@'%' IDENTIFIED BY 'Kennwort1';
+GRANT ALL PRIVILEGES ON Zeitmessung.* TO 'mariadbclient'@'%';
+
+FLUSH PRIVILEGES;
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

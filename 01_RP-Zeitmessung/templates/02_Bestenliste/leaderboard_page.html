@@ -16,13 +16,13 @@
 
     <header>
         <img src="{{ url_for('static', filename='05_Design/HTL-Weiz-Logo.jpg') }}" width="150px">
-        <h2 class="logo">
+        <h2 class="logo">Bestenliste 
             {% if category == "1" %}
-            Bestenliste HTL
+            FIA
             {% elif category == "2" %}
-            Bestenliste Cart
+            ZEC
             {% else %}
-            Bestenliste {{ category }}
+            Open
             {% endif %}
         </h2>
         <nav class="navigation">

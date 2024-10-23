@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import sys
 from pprint import pprint
 from pathlib import Path
@@ -7,12 +5,19 @@ from pathlib import Path
 from models     import teams, challenges, challenges_data, Session, Base, challenges_best_attempts, leaderboard, teams
 from sqlalchemy import create_engine, Select, Delete, func, insert, text, ScalarResult, asc as ascending, desc, alias, CursorResult
 from fpdf import FPDF
+import pandas as pd
 
-SERVER_IP   = "192.168.0.211"
+CREATE_DOCS = False
+
+SERVER_IP   = "192.168.13.180"
 DB_USER     = "mariadbclient"
 DB_PASSWORD = "Kennwort1"
 DB_PORT     = '3306'
 DB_NAME     = 'Zeitmessung'
+
+FACTOR_POWER_WEIGHT = 1.0
+FACTOR_ENERGY = 1.0
+NUM_CATEGORIES = 3
 
 
 db_url     = f'mariadb+mariadbconnector://{DB_USER}:{DB_PASSWORD}@{SERVER_IP}:{DB_PORT}/{DB_NAME}'
@@ -79,16 +84,6 @@ def calc_endurance(t_min: float, t_team: float,
     points_endenergy: float =  150 * (w_min/w_team) # End energy
     return points_endtime + points_endenergy
 
-# def calc_endurance(t_min: float, t_team: float,
-#                    n_tn:  float, n_rt:   float,
-#                    fac:   float) -> float:
-
-    points_endtime:   float =  100 * (t_min/t_team)  # End Time
-    points_endenergy: float =  150 * fac # End energy
-    return points_endtime + points_endenergy
-
-
-
 
 def get_best_attempts_sql(challenge_id: int) -> str:
     return f"""
@@ -114,8 +109,6 @@ def get_best_attempts_sql(challenge_id: int) -> str:
             FROM RankedTimes
             WHERE rank_num = 1 AND challenge = {challenge_id};
     """
-
-
 
 
 def populate_best_attempts() -> None:
@@ -231,7 +224,7 @@ def populate_leaderboard() -> None:
 
 
     # -> n_tn
-    for category_num in range(1, 3):
+    for category_num in range(1, NUM_CATEGORIES+1):
         team_count:      int = len(Session_db.scalars(Select(teams.name)
                                                     .where(teams.category == category_num)).all())
         
@@ -314,13 +307,20 @@ def populate_leaderboard() -> None:
 
     Session_db.commit()
 
+def category_name(category_num: int) -> str:
+    if category_num == 1:
+        return "FIA"
+    elif category_num == 2:
+        return "ZEC"
+    else:
+        return "Open"
 
 class PDF(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Leaderboard', 0, 1, 'C')
-        #self.image(Path(r"images_pdf") / Path("HTL-Weiz-Logo.jpg"), 10, 8, 33)  # Adjust the path and size as needed
-        #self.image(Path(r"images_pdf") / Path("HTL-Weiz-Logo.jpg"), 167, 8, 33)  # Adjust the path and size as needed
+        self.cell(0, 10, 'Leaderboard 2024', 0, 1, 'C')
+        self.image("images_pdf\HTL-Weiz-Logo.png", 10, 8, 33)  # Adjust the path and size as needed
+        self.image("images_pdf\ZEC-Logo.png", 167, 8, 33)  # Adjust the path and size as needed
         self.ln(20)  # Move to the next line after the images
 
     def footer(self):
@@ -346,9 +346,9 @@ def export_leaderboard_to_pdf():
     pdf = PDF()
     pdf.add_page()
 
-    for category_num in range(1, 3):
+    for category_num in range(1, NUM_CATEGORIES+1):
         # Overall points
-        pdf.chapter_title(f'Category {category_num} - Overall Points')
+        pdf.chapter_title(f'Category {category_name(category_num)} - Overall Points')
         leaderboard_data = Session_db.execute(
             Select(teams.name, leaderboard.points)
             .join(teams, leaderboard.team_id == teams.id)
@@ -359,9 +359,9 @@ def export_leaderboard_to_pdf():
 
     pdf.add_page()
 
-    for category_num in range(1, 3):
+    for category_num in range(1, NUM_CATEGORIES+1):
         # Skidpad points
-        pdf.chapter_title(f'Category {category_num} - Skidpad Points')
+        pdf.chapter_title(f'Category {category_name(category_num)} - Skidpad Points')
         skidpad_data = Session_db.execute(
             Select(teams.name, leaderboard.points_skidpad)
             .join(teams, leaderboard.team_id == teams.id)
@@ -371,7 +371,7 @@ def export_leaderboard_to_pdf():
         pdf.chapter_body(skidpad_data)
 
         # Slalom points
-        pdf.chapter_title(f'Category {category_num} - Slalom Points')
+        pdf.chapter_title(f'Category {category_name(category_num)} - Slalom Points')
         slalom_data = Session_db.execute(
             Select(teams.name, leaderboard.points_slalom)
             .join(teams, leaderboard.team_id == teams.id)
@@ -381,7 +381,7 @@ def export_leaderboard_to_pdf():
         pdf.chapter_body(slalom_data)
 
         # Acceleration points
-        pdf.chapter_title(f'Category {category_num} - Acceleration Points')
+        pdf.chapter_title(f'Category {category_name(category_num)} - Acceleration Points')
         acceleration_data = Session_db.execute(
             Select(teams.name, leaderboard.points_acceleration)
             .join(teams, leaderboard.team_id == teams.id)
@@ -391,7 +391,7 @@ def export_leaderboard_to_pdf():
         pdf.chapter_body(acceleration_data)
 
         # Endurance points
-        pdf.chapter_title(f'Category {category_num} - Endurance Points')
+        pdf.chapter_title(f'Category {category_name(category_num)} - Endurance Points')
         endurance_data = Session_db.execute(
             Select(teams.name, leaderboard.points_endurance)
             .join(teams, leaderboard.team_id == teams.id)
@@ -402,6 +402,62 @@ def export_leaderboard_to_pdf():
 
     pdf.output('leaderboard.pdf')
 
+def export_leaderboard_to_excel():
+    writer = pd.ExcelWriter('leaderboard.xlsx', engine='xlsxwriter')
+
+    for category_num in range(1, NUM_CATEGORIES+1):
+        # Overall points
+        leaderboard_data = Session_db.execute(
+            Select(teams.name, leaderboard.points, leaderboard.points_skidpad, leaderboard.points_slalom, leaderboard.points_acceleration, leaderboard.points_endurance)
+            .join(teams, leaderboard.team_id == teams.id)
+            .where(leaderboard.category == category_num)
+            .order_by(desc(leaderboard.points))
+        ).all()
+        df = pd.DataFrame(leaderboard_data, columns=['Team', 'Points', 'Skidpad Points', 'Slalom Points', 'Acceleration Points', 'Endurance Points'])
+        df.to_excel(writer, sheet_name=f'Category {category_name(category_num)} - Overall', index=False)
+
+        # Skidpad points
+        skidpad_data = Session_db.execute(
+            Select(teams.name, leaderboard.points_skidpad)
+            .join(teams, leaderboard.team_id == teams.id)
+            .where(leaderboard.category == category_num)
+            .order_by(desc(leaderboard.points_skidpad))
+        ).all()
+        df = pd.DataFrame(skidpad_data, columns=['Team', 'Skidpad Points'])
+        df.to_excel(writer, sheet_name=f'Category {category_name(category_num)} - Skidpad', index=False)
+
+        # Slalom points
+        slalom_data = Session_db.execute(
+            Select(teams.name, leaderboard.points_slalom)
+            .join(teams, leaderboard.team_id == teams.id)
+            .where(leaderboard.category == category_num)
+            .order_by(desc(leaderboard.points_slalom))
+        ).all()
+        df = pd.DataFrame(slalom_data, columns=['Team', 'Slalom Points'])
+        df.to_excel(writer, sheet_name=f'Category {category_name(category_num)} - Slalom', index=False)
+
+        # Acceleration points
+        acceleration_data = Session_db.execute(
+            Select(teams.name, leaderboard.points_acceleration)
+            .join(teams, leaderboard.team_id == teams.id)
+            .where(leaderboard.category == category_num)
+            .order_by(desc(leaderboard.points_acceleration))
+        ).all()
+        df = pd.DataFrame(acceleration_data, columns=['Team', 'Acceleration Points'])
+        df.to_excel(writer, sheet_name=f'Category {category_name(category_num)} - Acceleration', index=False)
+
+        # Endurance points
+        endurance_data = Session_db.execute(
+            Select(teams.name, leaderboard.points_endurance)
+            .join(teams, leaderboard.team_id == teams.id)
+            .where(leaderboard.category == category_num)
+            .order_by(desc(leaderboard.points_endurance))
+        ).all()
+        df = pd.DataFrame(endurance_data, columns=['Team', 'Endurance Points'])
+        df.to_excel(writer, sheet_name=f'Category {category_name(category_num)} - Endurance', index=False)
+
+    writer.close()
+
 
 
 def main() -> int:
@@ -409,8 +465,9 @@ def main() -> int:
 
     populate_best_attempts()
     populate_leaderboard()
-
-    export_leaderboard_to_pdf()
+    if CREATE_DOCS:
+        export_leaderboard_to_pdf()
+        export_leaderboard_to_excel()
 
     return 0
 

@@ -18,7 +18,8 @@ from mariadb import *
 
 
 # Server configuration
-SERVER_IP   = "192.168.0.211" # Replace "IP-Address" with the actual IP address of the RasPi
+SERVER_IP = "192.168.13.180" # Replace "IP-Address" with the actual IP address of the RasPi
+
 
 # MQTT configuration
 MQTT_USER = "mqttclient"        # Replace "mqttclient" with the actual MQTT username 
@@ -34,6 +35,7 @@ DB_PASSWORD = "Kennwort1"       # Replace "Kennwort1" with the actual database p
 MQTT_PORT = 1883  
 DB_PORT = '3306'
 DB_NAME = 'Zeitmessung'
+
 
 
 db_url = f'mariadb+mariadbconnector://{DB_USER}:{DB_PASSWORD}@{SERVER_IP}:{DB_PORT}/{DB_NAME}'
@@ -165,9 +167,9 @@ def update_team(event):
     else:
         messagebox.showerror('Error','Please input team.')
 
+
 def update_start_timestamp(man_timestamp):
     global start_timestamp
-    
     if man_timestamp == None:
         start1 = datetime.fromisoformat(selected_timestamp_start1.get()) if selected_timestamp_start1.get() not in ['','None'] else None
         start2 = datetime.fromisoformat(selected_timestamp_start2.get()) if selected_timestamp_start2.get() not in ['','None'] else None
@@ -332,6 +334,13 @@ def confirm():
     update_energy()
     update_power()
 
+    if challenge_db.name == 'Skidpad' or challenge_db.name == 'Slalom' or challenge_db.name == 'Endurance':
+        if timepenalty == 0.0:
+            answer = askyesno(title='Warning',
+                    message='No penalty value provided! Do you want to continue?')
+            if not answer:
+                return
+
     if challenge_db.name == 'Acceleration':
         if entry_energy.get() == '':
             answer = askyesno(title='Warning',
@@ -414,7 +423,41 @@ def decline():
         if isinstance(widget, Radiobutton):
             widget.destroy()
 
-    return   
+    start1_timestamps.clear()
+    start2_timestamps.clear()
+    finish1_timestamps.clear()
+    finish2_timestamps.clear()
+
+    return 
+
+def clear_radio_buttons():
+    global start_timestamp
+    global finish_timestamp
+    global laptime
+
+
+    start_timestamp = None
+    finish_timestamp = None
+    laptime = None
+
+    for widget in window.winfo_children():
+        if isinstance(widget, Radiobutton):
+            widget.deselect()
+
+    entry_start.delete(0,'end')
+    selected_timestamp_start1.set(None)
+    selected_timestamp_start2.set(None)
+    canvas.itemconfig(start_timestamp_id,text="")
+
+    entry_finish.delete(0,'end')
+    selected_timestamp_finish1.set(None)
+    selected_timestamp_finish2.set(None)
+    canvas.itemconfig(finish_timestamp_id,text="")
+
+    entry_laptime.delete(0,'end')
+    canvas.itemconfig(laptime_id,text="")
+
+    return  
 
 def update_devices():
     combo_start1['values'] = devices
@@ -423,6 +466,7 @@ def update_devices():
     combo_finish2['values'] = devices 
 
 def update_timestamps():
+
     for widget in window.winfo_children():
         if isinstance(widget, Radiobutton):
             widget.destroy()
@@ -433,9 +477,11 @@ def update_timestamps():
                 text=timestamp.time(),
                 variable=selected_timestamp_start1,
                 value=timestamp,
-                command=partial(update_start_timestamp,None)
+                command=partial(update_start_timestamp, None)
             )
             radiobutton.place(x=115.0, y=468.0+22*i)
+            radiobutton.deselect()
+
 
     for i,timestamp in enumerate(start2_timestamps):
         radiobutton = Radiobutton(
@@ -443,9 +489,10 @@ def update_timestamps():
             text=timestamp.time(),
             variable=selected_timestamp_start2,
             value=timestamp,
-            command=partial(update_start_timestamp,None)
+            command=partial(update_start_timestamp,None),
         )
         radiobutton.place(x=115.0, y=571.0+22*i)
+        radiobutton.deselect()
     
     for i,timestamp in enumerate(finish1_timestamps):
         radiobutton = Radiobutton(
@@ -456,6 +503,7 @@ def update_timestamps():
             command=partial(update_finish_timestamp,None)
         )
         radiobutton.place(x=115.0, y=679.0+22*i)
+        radiobutton.deselect()
 
     for i,timestamp in enumerate(finish2_timestamps):
         radiobutton = Radiobutton(
@@ -466,6 +514,12 @@ def update_timestamps():
             command=partial(update_finish_timestamp,None)
         )
         radiobutton.place(x=115.0, y=781.0+22*i)
+        radiobutton.deselect()
+    
+    selected_timestamp_start1.set(None)
+    selected_timestamp_start2.set(None)
+    selected_timestamp_finish1.set(None)
+    selected_timestamp_finish2.set(None)
 
 def update_status(button):
     global status
@@ -939,6 +993,23 @@ def build_gui():
         height=32.0
     )
 
+    # clear radio
+    button_clear_image = PhotoImage(
+        file=relative_to_assets("button_decline.png"))
+    button_clear = Button(
+        image=button_clear_image,
+        borderwidth=0,
+        highlightthickness=0,
+        command=clear_radio_buttons,
+        relief="flat"
+    )
+    button_clear.place(
+        x=115.0,
+        y=781.0+22*5,
+        width=99.0,
+        height=32.0
+    )
+
 
     window.resizable(True, True)
     loadConfig()
@@ -950,32 +1021,60 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("esp32/timestamp",qos=2)
     client.subscribe("clients",qos=2)
 
+
+
 def on_message(client, userdata, message):
     payload = message.payload.decode("utf-8")
-    print(payload)
     if message.topic == "esp32/timestamp" and status:
         data_json = json.loads(payload)
-       
-        if data_json["esp_id"] == start1_selected.get():
-            start1_timestamps.insert(0,parser.isoparse(data_json['timestamp']))
-            if len(start1_timestamps) == 5:
-                start1_timestamps.pop(4)
+
+        if(start1_selected.get() == finish1_selected.get()):
+            if data_json["esp_id"] == start1_selected.get():
+                timestamp = parser.isoparse(data_json['timestamp'])
+                if not start1_timestamps or (timestamp - start1_timestamps[0]).total_seconds() < 10:
+                    if len(start1_timestamps) == 4:
+                        start1_timestamps.pop(3)
+                    start1_timestamps.insert(len(start1_timestamps), timestamp)
+
+                else:
+                    if len(finish1_timestamps) == 4:
+                        finish1_timestamps.pop(3)
+                    finish1_timestamps.insert(len(finish1_timestamps), timestamp)
+
+
+            if data_json["esp_id"] == start2_selected.get():
+                timestamp = parser.isoparse(data_json['timestamp'])
+                if not start2_timestamps or (timestamp - start2_timestamps[0]).total_seconds() < 10:
+                    if len(start2_timestamps) == 4:
+                        start2_timestamps.pop(3)
+                    start2_timestamps.insert(len(start2_timestamps), timestamp)
+                else:
+                    if len(finish2_timestamps) == 4:
+                        finish2_timestamps.pop(3)
+                    finish2_timestamps.insert(len(finish2_timestamps), timestamp)
+        else:
+            # Just this case was handled in the previous version
+            if data_json["esp_id"] == start1_selected.get():
+                if len(start1_timestamps) == 4:
+                    start1_timestamps.pop(3)
+                start1_timestamps.insert(len(start1_timestamps),parser.isoparse(data_json['timestamp']))
+                    
+            if data_json["esp_id"] == start2_selected.get():
+                if len(start2_timestamps) == 4:
+                    start2_timestamps.pop(3)
+                start2_timestamps.insert(len(start2_timestamps),parser.isoparse(data_json["timestamp"]))
+
+            if data_json["esp_id"] == finish1_selected.get():
+                if len(finish1_timestamps) == 4:
+                    finish1_timestamps.pop(3)
+                finish1_timestamps.insert(len(finish1_timestamps),parser.isoparse(data_json["timestamp"]))
+
                 
+            if data_json["esp_id"] == finish2_selected.get():
+                if len(finish2_timestamps) == 4:
+                    finish2_timestamps.pop(3)
+                finish2_timestamps.insert(len(finish1_timestamps),parser.isoparse(data_json["timestamp"]))
 
-        if data_json["esp_id"] == start2_selected.get():  
-            start2_timestamps.insert(0,parser.isoparse(data_json["timestamp"]))
-            if len(start2_timestamps) == 5:
-                start2_timestamps.pop(4)
-
-        if data_json["esp_id"] == finish1_selected.get():
-            finish1_timestamps.insert(0,parser.isoparse(data_json["timestamp"]))
-            if len(finish1_timestamps) == 5:
-                finish1_timestamps.pop(4)
-            
-        if data_json["esp_id"] == finish2_selected.get():
-            finish2_timestamps.insert(0,parser.isoparse(data_json["timestamp"]))
-            if len(finish2_timestamps) == 5:
-                finish2_timestamps.pop(4)
 
         update_timestamps()
 

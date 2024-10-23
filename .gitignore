@@ -129,3 +129,4 @@ platformio_override.ini
 **/.DS_Store
 02_GUI/leaderboard.pdf
 02_GUI/db_struct_data.sql
+02_GUI/leaderboard.xlsx
