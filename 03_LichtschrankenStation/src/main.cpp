@@ -9,14 +9,18 @@
 #include <ESP32Time.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 
 // WiFi credentials
+//const char* wifi_ssid = "HTL-Weiz";           // Replace "SSID" with your WiFi network name
+//const char* wifi_password = "HTL-Weiz";   // Replace "PASSWORD" with your WiFi password
 const char* wifi_ssid = "BpwDPdrV6Lfn";           // Replace "SSID" with your WiFi network name
 const char* wifi_password = "SEDgDT9JuERp";   // Replace "PASSWORD" with your WiFi password
 
 // MQTT server configuration
-const char* mqtt_server = "SERVER-IP";    // Replace "SERVER-IP" with the IP address of your MQTT server
+const char* mqtt_server = "192.168.13.180";    // Replace "SERVER-IP" with the IP address of your MQTT server
 const char* mqtt_user = "mqttclient";     // Replace "mqttclient" with your MQTT username
 const char* mqtt_password = "Kennwort1";  // Replace "Kennwort1" with your MQTT password
 
@@ -34,9 +38,10 @@ String clientName;
 // time information
 unsigned long mic = 0;       // variable for microseconds
 time_t epochTime = 0;        // timestamp in seconds since 1970 (Epoch time)
-bool marker_interrupt = LOW; // boolean variable for interrupt marker with low level
+volatile bool marker_interrupt = LOW; // boolean variable for interrupt marker with low level
+volatile static int call_count = 0;
 
-
+//TODO: setup als RTC in case of no Internet connection
 // declaration of the rtc & set offset for MESZ
 ESP32Time rtc(3600);  
 
@@ -48,14 +53,28 @@ TFT_eSPI tft = TFT_eSPI(); // Invoke library, pins defined in User_Setup.h
 WiFiClient espClient;
 PubSubClient mqtt_client(espClient);
 
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+// Variables to save date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
 
 
 // interrrupt service routine
 void ISR()
 {
-  epochTime = rtc.getLocalEpoch() + 3600; // get current epoch seconds without offset & add offset for MESZ
+  epochTime = timeClient.getEpochTime() + 3600; // get current epoch seconds without offset & add offset for MESZ
+  //epochTime = rtc.getLocalEpoch() + 3600; // get current epoch seconds without offset & add offset for MESZ
   mic = rtc.getMicros();                  // get micro seconds
-  marker_interrupt = HIGH;                // set marker to indicate an interrupt that has been triggered
+  marker_interrupt = HIGH; 
+  if (++call_count >= 40) {
+    timeClient.update();
+    call_count = 0;
+  }
+                 // set marker to indicate an interrupt that has been triggered
 }
 
 // function to set the rtc
@@ -65,7 +84,6 @@ void rtc_setup()
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(2,2);
   tft.println("Waiting for GPS");
-  Serial.println("Waiting for GPS");
 
   while (!marker_set)
   {
@@ -118,7 +136,7 @@ void setup()
   
   pinMode(45, OUTPUT);
   digitalWrite(45, HIGH);
-  pinMode(15, INPUT);
+  pinMode(11, INPUT);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(wifi_ssid, wifi_password);
@@ -127,37 +145,44 @@ void setup()
   tft.setTextColor(TFT_GREEN);
   tft.setCursor(2,2);
   tft.println("Connecting to wifi...");
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println(".");
   }
-  while (1)
-  {
-    
-    Serial.printf("%4d", WiFi.RSSI());
-    delay(2000);
-  }
-  
+  // Initialize a NTPClient to get time
+  timeClient.begin();
+  // Set offset time in seconds to adjust for your timezone, for example:
+  // GMT +1 = 3600
+  // GMT +8 = 28800
+  // GMT -1 = -3600
+  // GMT 0 = 0
+  timeClient.setTimeOffset(3600);
 
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(2,2);
   tft.println("Connected to wifi...");
-
+  Serial.println("Connected to wifi...");
   delay(2000);
 
   String mac_adr = WiFi.macAddress();
   clientName = "ESP32-" + mac_adr;
-
+  Serial.println(clientName);
+  tft.println(clientName);
+  delay(5000);
   mqtt_client.setServer(mqtt_server,mqtt_port);
   mqtt_client.setBufferSize(1024);
   mqtt_client.setSocketTimeout(20);
 
   reconnect_mqtt();
   delay(1000);
-  rtc_setup();
+  //rtc_setup();
 
-  attachInterrupt(digitalPinToInterrupt(15), ISR, RISING);
+while(!timeClient.update()) {
+    timeClient.forceUpdate();
+  }
+  formattedDate = timeClient.getEpochTime();
+  Serial.println(formattedDate);
+  attachInterrupt(digitalPinToInterrupt(11), ISR, RISING);
 }
 
 void loop()
@@ -189,9 +214,9 @@ void loop()
     tft.println(clientName);
     tft.println();
     tft.setTextColor(TFT_GREEN);
-    tft.print("GPS:");
-    tft.setTextColor(TFT_WHITE);
-    tft.println(gps.satellites.value());
+    // tft.print("GPS:");
+    // tft.setTextColor(TFT_WHITE);
+    // tft.println(gps.satellites.value());
 
     marker_interrupt = LOW;
 
