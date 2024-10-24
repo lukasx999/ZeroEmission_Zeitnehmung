@@ -7,9 +7,9 @@ from sqlalchemy import create_engine, Select, Delete, func, insert, text, Scalar
 from fpdf import FPDF
 import pandas as pd
 
-CREATE_DOCS = False
+CREATE_DOCS = True
 
-SERVER_IP   = "192.168.13.180"
+SERVER_IP   = "192.168.0.148"
 DB_USER     = "mariadbclient"
 DB_PASSWORD = "Kennwort1"
 DB_PORT     = '3306'
@@ -318,8 +318,7 @@ def category_name(category_num: int) -> str:
 class PDF(FPDF):
     def header(self):
         self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Leaderboard 2024', 0, 1, 'C')
-        self.image("images_pdf\HTL-Weiz-Logo.png", 10, 8, 33)  # Adjust the path and size as needed
+        self.cell(0, 10, 'Zero Emission Challenge 2024', 0, 1, 'C')
         self.image("images_pdf\ZEC-Logo.png", 167, 8, 33)  # Adjust the path and size as needed
         self.ln(20)  # Move to the next line after the images
 
@@ -331,7 +330,7 @@ class PDF(FPDF):
     def chapter_title(self, title):
         self.set_font('Arial', 'B', 12)
         self.cell(0, 10, title, 0, 1, 'L')
-        self.ln(10)
+        self.ln(2)
 
     def chapter_body(self, data):
         self.set_font('Arial', '', 12)
@@ -459,6 +458,41 @@ def export_leaderboard_to_excel():
     writer.close()
 
 
+def export_all_times_to_pdf():
+    teams_list = Session_db.scalars(Select(teams)).all()
+
+    for team in teams_list:
+        pdf = PDF()
+        pdf.add_page()
+        pdf.chapter_title(f'Team: {team.name}')
+
+        for challenge in Session_db.scalars(Select(challenges)).all():
+            pdf.chapter_title(f'Challenge: {challenge.name}')
+            times_data = Session_db.execute(
+                Select(challenges_data.attempt_nr, challenges_data.time, challenges_data.timepenalty)
+                .where(challenges_data.tea_id == team.id)
+                .where(challenges_data.cmp_id == challenge.id)
+                .order_by(ascending(challenges_data.attempt_nr))
+            ).all()
+            pdf.cell(40, 10, 'Attempt', 1)
+            pdf.cell(40, 10, 'Total Time', 1)
+            pdf.cell(40, 10, 'Penalty', 1)
+            pdf.ln()
+
+            for row in times_data:
+                attempt_nr, time, penalty = row
+                pdf.cell(40, 10, str(attempt_nr), 1)
+                pdf.cell(40, 10, f'{time:.3f}', 1)
+                if penalty is None:
+                    penalty = 0
+                pdf.cell(40, 10, f'{penalty:.2f}', 1)
+                pdf.ln()
+
+        pdf.output(f'{team.name}_times.pdf')
+
+    
+
+
 
 def main() -> int:
     teams_list, challenges_list = setup_mariadb()
@@ -468,6 +502,7 @@ def main() -> int:
     if CREATE_DOCS:
         export_leaderboard_to_pdf()
         export_leaderboard_to_excel()
+        export_all_times_to_pdf()
 
     return 0
 
